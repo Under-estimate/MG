@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+<resource description="能被用来发电或者生产物品的有用矿物，通过矿场获得">矿石</resource>
+<resource description="每个人都需要的食物，通过农田获得">食物</resource>
+<resource description="工厂所需要的人力劳动资源，通过民居获得">人口</resource>
+<resource description="进行建造和科技研究所需要的能源，通过能源工厂获得">能源</resource>
+<resource description="进行建造和科技研究所需要的实体资源和工具，通过工厂获得">产能</resource>
+</root>

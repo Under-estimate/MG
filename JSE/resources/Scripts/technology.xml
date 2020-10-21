@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+<technology name="建筑：作坊式工厂" row="0" column="0" time="10">
+<requirements>
+</requirements>
+<consume>
+</consume>
+<produce>
+</produce>
+</technology>
+
+<technology name="生产扩大：增加更多的工人" row="1" column="1" target="工厂" time="30">
+<requirements>
+<requirement>建筑：作坊式工厂</requirement>
+</requirements>
+<consume>
+<resource name="人口">+10</resource>
+<resource name="食物">+20</resource>
+</consume>
+<produce>
+<resource name="产能">+5</resource>
+</produce>
+</technology>
+
+<technology name="新技术开发：铸铁" row="1" column="0" target="工厂" time="30">
+<requirements>
+<requirement>建筑：作坊式工厂</requirement>
+</requirements>
+<consume>
+<resource name="食物">+10</resource>
+</consume>
+<produce>
+<resource name="产能">+5</resource>
+</produce>
+</technology>
+
+<technology name="新技术开发：炼钢" row="2" column="0" target="工厂" time="60">
+<requirements>
+<requirement>新技术开发：铸铁</requirement>
+</requirements>
+<consume>
+</consume>
+<produce>
+<resource name="产能">+5</resource>
+</produce>
+</technology>
+</root>
