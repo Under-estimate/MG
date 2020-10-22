@@ -31,6 +31,7 @@ import java.util.jar.JarFile;
  * @author Jingsen Zhou
  * */
 public class R {
+    public static LoadingFrame loading;
     /**主窗体*/
     public static MainFrame M;
     /**主字体*/
@@ -47,9 +48,13 @@ public class R {
 
 
     public static void initResources(){
+        loading=new LoadingFrame();
+        loading.setVisible(true);
         exec=new ThreadPoolExecutor(3, 10, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), (r, executor) -> System.err.println("A task failed to execute."));
         loadXMLs();
         M=new MainFrame();
+        loading.setVisible(false);
+        R.M.setVisible(true);
     }
     private static void forEachElement(Element root, String name, Consumer<Element> c){
         NodeList list=root.getElementsByTagName(name);
@@ -59,6 +64,7 @@ public class R {
     }
     private static void loadXMLs(){
         try {
+            loading.setText("Loading resource.xml");
             DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
             Document d=builder.parse(loader.getResourceAsStream("Scripts/resource.xml"));
             resources=new HashMap<>();
@@ -67,6 +73,7 @@ public class R {
                 r.image=getImageResource("Images/"+r.name+".png");
                 resources.put(r.name,r);
             });
+            loading.setText("Loading structure.xml");
             d=builder.parse(loader.getResourceAsStream("Scripts/structure.xml"));
             structures=new HashMap<>();
             forEachElement(d.getDocumentElement(), "structure", e -> {
@@ -80,6 +87,7 @@ public class R {
                         ele->s.produce.data.put(ele.getAttribute("name"),Integer.parseInt(ele.getTextContent())));
                 structures.put(s.name,s);
             });
+            loading.setText("loading technology.xml");
             d=builder.parse(loader.getResourceAsStream("Scripts/technology.xml"));
             technologies=new HashMap<>();
             forEachElement(d.getDocumentElement(),"technology",e->{
@@ -90,6 +98,8 @@ public class R {
                 forEachElement((Element)e.getElementsByTagName("requirements").item(0),"requirement",
                         ele->trl.add(ele.getTextContent()));
                 t.requirements=trl.toArray(new String[0]);
+                if(t.requirements.length<=0)
+                    t.acquired=true;
                 forEachElement((Element)e.getElementsByTagName("consume").item(0),"resource",
                         ele->t.consume.data.put(ele.getAttribute("name"),Integer.parseInt(ele.getTextContent())));
                 forEachElement((Element)e.getElementsByTagName("produce").item(0),"resource",

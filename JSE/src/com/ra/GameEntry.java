@@ -9,6 +9,5 @@ import com.ra.ui.R;
 public class GameEntry {
     public static void main(String[] args) {
         R.initResources();
-        R.M.setVisible(true);
     }
 }

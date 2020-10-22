@@ -4,6 +4,7 @@ import com.ra.data.ResourceGroup;
 import com.ra.data.Structure;
 import com.ra.ui.component.*;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
@@ -24,9 +25,11 @@ public class GamePane extends GameContentPane {
     private int optionX=-1,optionY=-1;
     private boolean showOption=false;
     public Point building=null;
+    public int labCount=0;
     public static int xOffset=100,yOffset=500,metric=100;
     protected ConstructionOption options=new ConstructionOption();
     protected BuildingOperation operation=new BuildingOperation();
+    protected TechnologyPane techPane=new TechnologyPane();
 
     @LayoutParam(offsetX=10,offsetY=10,fixedWidth=100,fixedHeight=100)
     protected final MyButton technology=new MyButton("科技");
@@ -34,13 +37,18 @@ public class GamePane extends GameContentPane {
     protected final MyButton storage=new MyButton("存储");
     @LayoutParam(anchorX=1,anchorY=1,offsetX=-1000,offsetY=-60,fixedWidth = 990,fixedHeight = 50)
     public final ResourceDisplay resource;
+    @LayoutParam(offsetX=130,offsetY=80,widthRate=1,heightRate=1,fixedWidth=-140,fixedHeight=-160)
+    protected final TechnologyPane tmp=techPane;
 
     public GamePane(){
         super();
         setOpaque(false);
         ResourceGroup initial=new ResourceGroup();
-        initial.data.put("人口",200);
-        initial.data.put("食物",200);
+        initial.data.put("人口",10000);
+        initial.data.put("食物",10000);
+        initial.data.put("能源",10000);
+        initial.data.put("产能",10000);
+        initial.data.put("矿石",10000);
         resource=new ResourceDisplay(initial);
         initComponents();
         initLayout();
@@ -62,7 +70,12 @@ public class GamePane extends GameContentPane {
             for (int j = 0; j < 5; j++)
                 lack[i][j]=false;
         technology.setForeground(Color.CYAN);
+        techPane.setVisible(false);
         storage.setForeground(Color.green);
+        technology.setActionListener(e-> {
+            techPane.setVisible(!techPane.isVisible());
+            technology.setText(techPane.isVisible()?"关闭":"科技");
+        });
         for (int i = 0; i < 5; i++)
             for (int j = 0; j < 5; j++)
                 state[i][j]=null;
@@ -100,6 +113,10 @@ public class GamePane extends GameContentPane {
                 Point p=calcTransformedPosition(e.getPoint(),xOffset,yOffset,metric);
                 mouseX=p.x;
                 mouseY=p.y;
+                if(mouseX>=0&&mouseY>=0&&state[mouseX][mouseY]!=null)
+                    setToolTipText(state[mouseX][mouseY].name);
+                else
+                    setToolTipText(null);
             }
         });
         renderer=new Thread(()->{
@@ -155,6 +172,12 @@ public class GamePane extends GameContentPane {
             }
         super.paintChildren(g);
     }
+
+    @Override
+    public JToolTip createToolTip() {
+        return new BuildingDetailTip();
+    }
+
     public void callBuild(String structure){
         showOption=false;
         remove(options);
@@ -184,22 +207,30 @@ public class GamePane extends GameContentPane {
             }
             remove(construction);
             state[p.x][p.y]=R.structures.get(structure);
+            if(structure.equals("科研中心"))
+                labCount++;
             building=null;
         });
     }
     public void callDestroy(){
+        if(state[optionX][optionY].name.equals("科研中心"))
+            labCount--;
         state[optionX][optionY]=null;
         remove(operation);
         revalidate();
     }
     private void calcResourceModification(){
         boolean hasChange=true;
+        int remainResearchProgress=0;
+        if(techPane.ongoingTechResearch!=null)
+            remainResearchProgress=R.technologies.get(techPane.ongoingTechResearch).time-techPane.progress;
         ResourceGroup update=new ResourceGroup();
         ArrayList<Point> lacking=new ArrayList<>();
         for (int i = 0; i < 5; i++)
             for (int j = 0; j < 5; j++)
-                if(state[i][j]!=null)
-                    lacking.add(new Point(i,j));
+                if (state[i][j] != null)
+                    lacking.add(new Point(i, j));
+        int requiredLab=Math.min(labCount,remainResearchProgress);
         while(hasChange) {
             hasChange=false;
             Iterator<Point> it=lacking.iterator();
@@ -209,13 +240,22 @@ public class GamePane extends GameContentPane {
                 boolean isLack=false;
                 for(String s:target.consume.data.keySet()) {
                     if ( update.data.get(s) + resource.data.data.get(s) - target.consume.data.get(s)< 0) {
-                        isLack=true;
+                        if(target.name.equals("科研中心")&&requiredLab<=0)
+                            isLack=false;
+                        else
+                            isLack=true;
                         break;
                     }
                 }
                 if(!isLack) {
-                    for (String s : R.resources.keySet())
-                        update.data.put(s, update.data.get(s) + target.produce.data.get(s) - target.consume.data.get(s));
+                    if(!target.name.equals("科研中心")){
+                        for (String s : R.resources.keySet())
+                            update.data.put(s, update.data.get(s) + target.produce.data.get(s) - target.consume.data.get(s));
+                    }else if(requiredLab > 0){
+                        for (String s : R.resources.keySet())
+                            update.data.put(s, update.data.get(s) + target.produce.data.get(s) - target.consume.data.get(s));
+                        requiredLab--;
+                    }
                     it.remove();
                     hasChange=true;
                 }
@@ -227,6 +267,8 @@ public class GamePane extends GameContentPane {
         for(Point p:lacking)
             lack[p.x][p.y]=true;
         resource.submitChange(update);
+        if(techPane.ongoingTechResearch!=null)
+            techPane.updateProgress(labCount-requiredLab);
     }
     /**
      * 计算鼠标点击处对应的区域坐标。

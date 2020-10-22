@@ -9,6 +9,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.util.Iterator;
+import java.util.concurrent.Future;
 
 /**
  * 显示当前的资源数据。
@@ -19,6 +20,8 @@ public class ResourceDisplay extends JPanel {
     public ResourceGroup change;
     private int progress=255;
     private int mouse=-1;
+    private Future<?> animating=null;
+    private final Object interruptLock=new Object();
     public ResourceDisplay(ResourceGroup initial){
         super();
         setOpaque(false);
@@ -53,7 +56,17 @@ public class ResourceDisplay extends JPanel {
         for (String s:R.resources.keySet()){
             data.data.put(s,data.data.get(s)+change.data.get(s));
         }
-        R.exec.execute(()->{
+        if(animating!=null){
+            try {
+                synchronized (interruptLock) {
+                    animating=null;
+                    interruptLock.wait();
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        animating=R.exec.submit(()->{
             for (int i = 0; i <= 51; i++) {
                 progress=i*5;
                 try{
@@ -61,7 +74,14 @@ public class ResourceDisplay extends JPanel {
                 }catch (Exception e){
                     e.printStackTrace();
                 }
+                if(animating==null){
+                    synchronized (interruptLock) {
+                        interruptLock.notify();
+                    }
+                    break;
+                }
             }
+            animating=null;
         });
     }
 
@@ -86,17 +106,20 @@ public class ResourceDisplay extends JPanel {
                 g2.fillRect((int)(getWidth()*0.2*i),0,(int)(getWidth()*0.2),getHeight());
             }
             int ci=change.data.get(s);
-            String cs=Integer.toString(ci);
-            cs=(ci>0?"+":"")+cs;
-            Color c=new Color(ci<0?255:0,ci>0?255:0,0,255-progress);
-            g2.setColor(c);
-            g2.fillRect((int)(getWidth()*(0.2*i+0.15)),0,(int)(getWidth()*0.05),getHeight());
+            if(ci!=0) {
+                String cs = Integer.toString(ci);
+                cs = (ci > 0 ? "+" : "") + cs;
+                Color c = new Color(ci < 0 ? 255 : 0, ci > 0 ? 255 : 0, 0, 255 - progress);
+                g2.setColor(c);
+                g2.fillRect((int) (getWidth() * (0.2 * i + 0.15)), 0, (int) (getWidth() * 0.05), getHeight());
+                g2.setColor(Color.WHITE);
+                g2.drawString(cs, (int) (getWidth() * (0.2 * i + 0.15)), (int) (getHeight() * 0.7));
+            }
             g2.setColor(Color.WHITE);
             g2.drawImage(R.resources.get(s).image,(int)(getWidth()*i*0.2),5,40,40,this);
             if(i<4)
                 g2.drawLine((int)(getWidth()*0.2*(i+1)),0,(int)(getWidth()*0.2*(i+1)),getHeight());
             g2.drawString(Integer.toString(data.data.get(s)),(int)(getWidth()*(0.2*i+0.05)),(int)(getHeight()*0.7));
-            g2.drawString(cs,(int)(getWidth()*(0.2*i+0.15)),(int)(getHeight()*0.7));
             i++;
         }
     }

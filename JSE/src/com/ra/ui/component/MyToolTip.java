@@ -11,6 +11,7 @@ public class MyToolTip extends JToolTip {
     public MyToolTip(){
         super();
         setOpaque(false);
+        setBackground(new Color(0,0,0,0));
     }
 
     @Override

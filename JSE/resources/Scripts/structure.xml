@@ -86,7 +86,7 @@
 </produce>
 </structure>
 
-<structure name="科研中心" description="这里能够进行对新科技的研究" time="30">
+<structure name="科研中心" description="只在研究新科技时消耗资源" time="30">
 <build>
 <resource name="食物">100</resource>
 <resource name="人口">25</resource>

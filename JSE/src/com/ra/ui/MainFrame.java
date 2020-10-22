@@ -16,6 +16,7 @@ public class MainFrame extends JFrame {
     public static final int WIDTH=1280,HEIGHT=768;
     public MainFrame(){
         super("游戏名叫啥呀? alpha-0.1.0-EA - Team Rise Again");
+        R.loading.setText("Initializing main frame...");
         setMinimumSize(new Dimension(WIDTH,HEIGHT));
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         Dimension d=Toolkit.getDefaultToolkit().getScreenSize();

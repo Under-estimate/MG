@@ -1,6 +1,8 @@
 package com.ra.data;
 
 
+import java.awt.*;
+
 public class Technology {
     public String name;
     public String[] requirements;
@@ -9,6 +11,9 @@ public class Technology {
     public ResourceGroup consume,produce;
 
     public int column=0,row=0;
+
+    public boolean acquired=false;
+    public Point storageLocation;
     public Technology(String name,String modifier,int time){
         this.name=name;
         this.modifier=modifier;

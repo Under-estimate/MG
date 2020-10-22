@@ -23,6 +23,7 @@ public class ConstructingPane extends JPanel {
         FontMetrics fm= FontDesignMetrics.getMetrics(R.F);
         int width=fm.stringWidth("建造中..");
         g2.drawString("建造中...",(getWidth()-width)/2,26);
+        g2.setStroke(new BasicStroke(1f));
         g2.setColor(Color.GREEN);
         g2.fillRect(1,getHeight()/2,(int)((getWidth()-2)*progress),10);
         g2.setColor(Color.WHITE);

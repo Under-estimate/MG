@@ -20,6 +20,8 @@ public class ConstructionOption extends JPanel {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
+                if(R.M.getContent(GamePane.class).building!=null)
+                    return;
                 int option=calcMousePos(e.getPoint());
                 boolean[] availability=calcAvailability();
                 if(option>=0&&availability[option])

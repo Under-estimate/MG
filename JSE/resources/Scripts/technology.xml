@@ -1,47 +1,475 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
-<technology name="建筑：作坊式工厂" row="0" column="0" time="10">
-<requirements>
-</requirements>
-<consume>
-</consume>
-<produce>
-</produce>
-</technology>
+    <technology name="建筑：作坊式工厂" row="0" column="1" target="工厂" time="0" era="1">
+        <requirements>
+        </requirements>
+        <consume>
+        </consume>
+        <produce>
+        </produce>
+    </technology>
 
-<technology name="生产扩大：增加更多的工人" row="1" column="1" target="工厂" time="30">
-<requirements>
-<requirement>建筑：作坊式工厂</requirement>
-</requirements>
-<consume>
-<resource name="人口">+10</resource>
-<resource name="食物">+20</resource>
-</consume>
-<produce>
-<resource name="产能">+5</resource>
-</produce>
-</technology>
+    <technology name="生产扩大：增加更多的工人" row="1" column="1" target="工厂" time="30" era="1">
+        <requirements>
+            <requirement>建筑：作坊式工厂</requirement>
+        </requirements>
+        <consume>
+            <resource name="人口">+10</resource>
+            <resource name="食物">+20</resource>
+        </consume>
+        <produce>
+            <resource name="产能">+5</resource>
+        </produce>
+    </technology>
 
-<technology name="新技术开发：铸铁" row="1" column="0" target="工厂" time="30">
-<requirements>
-<requirement>建筑：作坊式工厂</requirement>
-</requirements>
-<consume>
-<resource name="食物">+10</resource>
-</consume>
-<produce>
-<resource name="产能">+5</resource>
-</produce>
-</technology>
+    <technology name="新技术开发：铸铁" row="1" column="0" target="工厂" time="30" era="1">
+        <requirements>
+            <requirement>建筑：作坊式工厂</requirement>
+        </requirements>
+        <consume>
+            <resource name="食物">+10</resource>
+        </consume>
+        <produce>
+            <resource name="产能">+5</resource>
+        </produce>
+    </technology>
 
-<technology name="新技术开发：炼钢" row="2" column="0" target="工厂" time="60">
-<requirements>
-<requirement>新技术开发：铸铁</requirement>
-</requirements>
-<consume>
-</consume>
-<produce>
-<resource name="产能">+5</resource>
-</produce>
-</technology>
+    <technology name="新技术开发：炼钢" row="2" column="0" target="工厂" time="45" era="1">
+        <requirements>
+            <requirement>新技术开发：铸铁</requirement>
+        </requirements>
+        <consume>
+        </consume>
+        <produce>
+            <resource name="产能">+5</resource>
+        </produce>
+    </technology>
+
+    <technology name="机械：基础曲柄连杆结构" row="1" column="2" target="工厂" time="30" era="1">
+        <requirements>
+            <requirement>建筑：作坊式工厂</requirement>
+        </requirements>
+        <consume>
+            <resource name="人口">-5</resource>
+        </consume>
+        <produce>
+        </produce>
+    </technology>
+
+    <technology name="机械：简单齿轮组合" row="2" column="2" target="工厂" time="45" era="1">
+        <requirements>
+            <requirement>机械：基础曲柄连杆结构</requirement>
+        </requirements>
+        <consume>
+            <resource name="人口">-5</resource>
+        </consume>
+        <produce>
+        </produce>
+    </technology>
+
+    <technology name="建筑：机械式工厂" row="3" column="1" target="工厂" time="60" era="2">
+        <requirements>
+            <requirement>生产扩大：增加更多的工人</requirement>
+        </requirements>
+        <consume>
+            <resource name="人口">-5</resource>
+        </consume>
+        <produce>
+        </produce>
+    </technology>
+
+    <technology name="合金I：黄铜" row="4" column="0" target="工厂" time="60" era="2">
+        <requirements>
+            <requirement>建筑：机械式工厂</requirement>
+            <requirement>新技术开发：炼钢</requirement>
+        </requirements>
+        <consume>
+            <resource name="矿石">+5</resource>
+        </consume>
+        <produce>
+            <resource name="产能">+5</resource>
+        </produce>
+    </technology>
+
+    <technology name="合金II：铝合金" row="5" column="0" target="工厂" time="75" era="2">
+        <requirements>
+            <requirement>合金I：黄铜</requirement>
+        </requirements>
+        <consume>
+            <resource name="矿石">+10</resource>
+        </consume>
+        <produce>
+            <resource name="产能">+5</resource>
+        </produce>
+    </technology>
+
+    <technology name="昼夜不停：24小时轮班" row="4" column="1" target="工厂" time="60" era="2">
+        <requirements>
+            <requirement>建筑：机械式工厂</requirement>
+        </requirements>
+        <consume>
+            <resource name="食物">+10</resource>
+        </consume>
+        <produce>
+            <resource name="产能">+5</resource>
+        </produce>
+    </technology>
+
+    <technology name="机械：精密齿轮组合" row="4" column="2" target="工厂" time="60" era="2">
+        <requirements>
+            <requirement>建筑：机械式工厂</requirement>
+            <requirement>机械：简单齿轮组合</requirement>
+        </requirements>
+        <consume>
+        </consume>
+        <produce>
+            <resource name="产能">+5</resource>
+        </produce>
+    </technology>
+
+    <technology name="机械：自动化！" row="5" column="2" target="工厂" time="90" era="2">
+        <requirements>
+            <requirement>机械：精密齿轮组合</requirement>
+        </requirements>
+        <consume>
+            <resource name="人口">-10</resource>
+        </consume>
+        <produce>
+        </produce>
+    </technology>
+
+    <technology name="建筑：农田" row="0" column="4" target="农田" time="0" era="1">
+        <requirements>
+        </requirements>
+        <consume>
+        </consume>
+        <produce>
+        </produce>
+    </technology>
+
+    <technology name="工具发明：犁" row="1" column="3" target="农田" time="15" era="1">
+        <requirements>
+            <requirement>建筑：农田</requirement>
+        </requirements>
+        <consume>
+            <resource name="食物">-2</resource>
+        </consume>
+        <produce>
+        </produce>
+    </technology>
+
+    <technology name="工具发明：水车" row="2" column="3" target="农田" time="30" era="1">
+        <requirements>
+            <requirement>工具发明：犁</requirement>
+        </requirements>
+        <consume>
+            <resource name="食物">-3</resource>
+        </consume>
+        <produce>
+        </produce>
+    </technology>
+
+    <technology name="耕种策略：一年一熟" row="1" column="5" target="农田" time="15" era="1">
+        <requirements>
+            <requirement>建筑：农田</requirement>
+        </requirements>
+        <consume>
+        </consume>
+        <produce>
+            <resource name="食物">+5</resource>
+        </produce>
+    </technology>
+
+    <technology name="耕种策略：复种轮作" row="2" column="5" target="农田" time="30" era="1">
+        <requirements>
+            <requirement>耕种策略：一年一熟</requirement>
+        </requirements>
+        <consume>
+        </consume>
+        <produce>
+            <resource name="食物">+5</resource>
+        </produce>
+    </technology>
+
+    <technology name="建筑：机械式农场" row="3" column="4" target="农田" time="60" era="2">
+        <requirements>
+            <requirement>建筑：农田</requirement>
+        </requirements>
+        <consume>
+            <resource name="产能">+3</resource>
+        </consume>
+        <produce>
+            <resource name="食物">+5</resource>
+        </produce>
+    </technology>
+
+    <technology name="工具发明：蒸汽式洒水机" row="4" column="3" target="农田" time="60" era="2">
+        <requirements>
+            <requirement>工具发明：水车</requirement>
+            <requirement>建筑：机械式农场</requirement>
+        </requirements>
+        <consume>
+            <resource name="产能">+5</resource>
+        </consume>
+        <produce>
+            <resource name="食物">+10</resource>
+        </produce>
+    </technology>
+
+    <technology name="工具发明：蒸汽式拖拉机" row="5" column="3" target="农田" time="75" era="2">
+        <requirements>
+            <requirement>工具发明：蒸汽式洒水机</requirement>
+        </requirements>
+        <consume>
+            <resource name="产能">+5</resource>
+        </consume>
+        <produce>
+            <resource name="食物">+10</resource>
+        </produce>
+    </technology>
+
+    <technology name="耕种策略：大棚温室" row="4" column="5" target="农田" time="60" era="2">
+        <requirements>
+            <requirement>耕种策略：复种轮作</requirement>
+            <requirement>建筑：机械式农场</requirement>
+        </requirements>
+        <consume>
+            <resource name="人口">+5</resource>
+        </consume>
+        <produce>
+            <resource name="食物">+5</resource>
+        </produce>
+    </technology>
+
+    <technology name="耕种策略：自动化！" row="5" column="5" target="农田" time="90" era="2">
+        <requirements>
+            <requirement>耕种策略：大棚温室</requirement>
+        </requirements>
+        <consume>
+            <resource name="人口">-5</resource>
+        </consume>
+        <produce>
+            <resource name="食物">+10</resource>
+        </produce>
+    </technology>
+
+    <technology name="建筑：矿场" row="0" column="7" target="矿场" time="0" era="1">
+        <requirements>
+        </requirements>
+        <consume>
+        </consume>
+        <produce>
+        </produce>
+    </technology>
+
+    <technology name="工具发明：独轮车" row="1" column="6" target="矿场" time="30" era="1">
+        <requirements>
+            <requirement>建筑：矿场</requirement>
+        </requirements>
+        <consume>
+            <resource name="食物">-2</resource>
+        </consume>
+        <produce>
+        </produce>
+    </technology>
+
+    <technology name="采矿策略：竖井式" row="1" column="8" target="矿场" time="30" era="1">
+        <requirements>
+            <requirement>建筑：矿场</requirement>
+        </requirements>
+        <consume>
+            <resource name="食物">+5</resource>
+        </consume>
+        <produce>
+            <resource name="矿石">+5</resource>
+        </produce>
+    </technology>
+
+    <technology name="建筑：机械式矿场" row="2" column="7" target="矿场" time="60" era="2">
+        <requirements>
+            <requirement>建筑：矿场</requirement>
+        </requirements>
+        <consume>
+            <resource name="产能">+3</resource>
+        </consume>
+        <produce>
+            <resource name="矿石">+5</resource>
+        </produce>
+    </technology>
+
+    <technology name="工具发明：蒸汽矿车" row="3" column="6" target="矿场" time="60" era="2">
+        <requirements>
+            <requirement>工具发明：独轮车</requirement>
+            <requirement>建筑：机械式矿场</requirement>
+        </requirements>
+        <consume>
+            <resource name="能源">+3</resource>
+            <resource name="产能">+2</resource>
+            <resource name="食物">-2</resource>
+        </consume>
+        <produce>
+            <resource name="矿石">+5</resource>
+        </produce>
+    </technology>
+
+    <technology name="工具发明：蒸汽采矿机" row="4" column="6" target="矿场" time="75" era="2">
+        <requirements>
+            <requirement>工具发明：蒸汽矿车</requirement>
+        </requirements>
+        <consume>
+            <resource name="能源">+2</resource>
+            <resource name="产能">+5</resource>
+            <resource name="食物">-2</resource>
+        </consume>
+        <produce>
+            <resource name="矿石">+5</resource>
+        </produce>
+    </technology>
+
+    <technology name="采矿策略：自动化！" row="3" column="8" target="矿场" time="90" era="2">
+        <requirements>
+            <requirement>建筑：机械式矿场</requirement>
+            <requirement>采矿策略：竖井式</requirement>
+        </requirements>
+        <consume>
+            <resource name="人口">-2</resource>
+        </consume>
+        <produce>
+            <resource name="矿石">+5</resource>
+        </produce>
+    </technology>
+
+    <technology name="建筑：民居" row="0" column="10" target="民居" time="0" era="1">
+        <requirements>
+        </requirements>
+        <consume>
+        </consume>
+        <produce>
+        </produce>
+    </technology>
+
+    <technology name="装修：实用性增加" row="1" column="9" target="民居" time="30" era="1">
+        <requirements>
+            <requirement>建筑：民居</requirement>
+        </requirements>
+        <consume>
+        </consume>
+        <produce>
+            <resource name="人口">+2</resource>
+        </produce>
+    </technology>
+
+    <technology name="建筑：公寓式民居" row="2" column="10" target="民居" time="60" era="2">
+        <requirements>
+            <requirement>建筑：民居</requirement>
+        </requirements>
+        <consume>
+        </consume>
+        <produce>
+            <resource name="人口">+2</resource>
+        </produce>
+    </technology>
+
+    <technology name="装修：舒适度增加" row="3" column="9" target="民居" time="60" era="2">
+        <requirements>
+            <requirement>装修：实用性增加</requirement>
+            <requirement>建筑：公寓式民居</requirement>
+        </requirements>
+        <consume>
+        </consume>
+        <produce>
+            <resource name="人口">+2</resource>
+        </produce>
+    </technology>
+
+    <technology name="配置：自来水" row="3" column="10" target="民居" time="60" era="2">
+        <requirements>
+            <requirement>建筑：公寓式民居</requirement>
+        </requirements>
+        <consume>
+            <resource name="产能">+3</resource>
+        </consume>
+        <produce>
+            <resource name="人口">+2</resource>
+        </produce>
+    </technology>
+
+    <technology name="配置：集中供暖" row="4" column="10" target="民居" time="75" era="2">
+        <requirements>
+            <requirement>配置：自来水</requirement>
+        </requirements>
+        <consume>
+            <resource name="能源">+2</resource>
+        </consume>
+        <produce>
+            <resource name="人口">+2</resource>
+        </produce>
+    </technology>
+
+    <technology name="建筑：能源工厂" row="0" column="11" target="能源工厂" time="0" era="1">
+        <requirements>
+        </requirements>
+        <consume>
+        </consume>
+        <produce>
+        </produce>
+    </technology>
+
+    <technology name="深度开发：煤炭" row="1" column="12" target="能源工厂" time="30" era="1">
+        <requirements>
+            <requirement>建筑：能源工厂</requirement>
+        </requirements>
+        <consume>
+            <resource name="矿石">+5</resource>
+        </consume>
+        <produce>
+            <resource name="能源">+5</resource>
+        </produce>
+    </technology>
+
+    <technology name="建筑：现代能源工厂" row="2" column="11" target="能源工厂" time="60" era="2">
+        <requirements>
+            <requirement>建筑：能源工厂</requirement>
+        </requirements>
+        <consume>
+            <resource name="产能">+2</resource>
+        </consume>
+        <produce>
+            <resource name="能源">+3</resource>
+        </produce>
+    </technology>
+
+    <technology name="深度开发：蜂窝煤" row="3" column="12" target="能源工厂" time="60" era="2">
+        <requirements>
+            <requirement>深度开发：煤炭</requirement>
+            <requirement>建筑：现代能源工厂</requirement>
+        </requirements>
+        <consume>
+        </consume>
+        <produce>
+            <resource name="能源">+3</resource>
+        </produce>
+    </technology>
+
+    <technology name="广度开发：天然气" row="3" column="11" target="能源工厂" time="60" era="2">
+        <requirements>
+            <requirement>建筑：现代能源工厂</requirement>
+        </requirements>
+        <consume>
+        </consume>
+        <produce>
+            <resource name="能源">+2</resource>
+        </produce>
+    </technology>
+
+    <technology name="广度开发：石油" row="4" column="11" target="能源工厂" time="75" era="2">
+        <requirements>
+            <requirement>广度开发：天然气</requirement>
+        </requirements>
+        <consume>
+        </consume>
+        <produce>
+            <resource name="能源">+2</resource>
+        </produce>
+    </technology>
 </root>
