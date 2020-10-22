@@ -3,6 +3,7 @@ package com.ra.ui.component;
 import com.ra.data.Resource;
 import com.ra.data.Structure;
 import com.ra.data.Technology;
+import com.ra.ui.GamePane;
 import com.ra.ui.R;
 
 import javax.swing.*;
@@ -36,7 +37,7 @@ public class TechnologyPane extends JPanel {
                     Technology target=distribution.get(p);
                     for(String s:target.requirements)
                         satisfied=satisfied&&R.technologies.get(s).acquired;
-                    if(satisfied&&!target.acquired&&ongoingTechResearch==null) {
+                    if(satisfied&&!target.acquired&&ongoingTechResearch==null&&R.M.getContent(GamePane.class).labCount>0) {
                         progress=0;
                         ongoingTechResearch=target.name;
                     }

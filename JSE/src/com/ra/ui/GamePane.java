@@ -44,11 +44,13 @@ public class GamePane extends GameContentPane {
         super();
         setOpaque(false);
         ResourceGroup initial=new ResourceGroup();
-        initial.data.put("人口",10000);
-        initial.data.put("食物",10000);
-        initial.data.put("能源",10000);
-        initial.data.put("产能",10000);
-        initial.data.put("矿石",10000);
+        initial.data.put("人口",200);
+        initial.data.put("食物",200);
+//        initial.data.put("人口",10000);
+//        initial.data.put("食物",10000);
+//        initial.data.put("能源",10000);
+//        initial.data.put("产能",10000);
+//        initial.data.put("矿石",10000);
         resource=new ResourceDisplay(initial);
         initComponents();
         initLayout();
