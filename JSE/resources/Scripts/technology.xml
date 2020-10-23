@@ -152,7 +152,7 @@
             <requirement>建筑：农田</requirement>
         </requirements>
         <consume>
-            <resource name="食物">-2</resource>
+            <resource name="人口">-1</resource>
         </consume>
         <produce>
         </produce>
@@ -163,7 +163,7 @@
             <requirement>工具发明：犁</requirement>
         </requirements>
         <consume>
-            <resource name="食物">-3</resource>
+            <resource name="人口">-1</resource>
         </consume>
         <produce>
         </produce>

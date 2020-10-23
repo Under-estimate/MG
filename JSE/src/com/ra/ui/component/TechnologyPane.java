@@ -1,10 +1,12 @@
 package com.ra.ui.component;
 
 import com.ra.data.Resource;
+import com.ra.data.ResourceGroup;
 import com.ra.data.Structure;
 import com.ra.data.Technology;
 import com.ra.ui.GamePane;
 import com.ra.ui.R;
+import com.ra.ui.tooltip.TechDetailTip;
 
 import javax.swing.*;
 import java.awt.*;
@@ -37,16 +39,19 @@ public class TechnologyPane extends JPanel {
                     Technology target=distribution.get(p);
                     for(String s:target.requirements)
                         satisfied=satisfied&&R.technologies.get(s).acquired;
-                    if(satisfied&&!target.acquired&&ongoingTechResearch==null&&R.M.getContent(GamePane.class).labCount>0) {
+                    GamePane src=R.M.getContent(GamePane.class);
+                    if(satisfied&&!target.acquired&&ongoingTechResearch==null
+                            &&src.labCount>0&&src.storagePane.hasSpace()) {
                         progress=0;
                         ongoingTechResearch=target.name;
+                        src.storagePane.callStorage(target);
                     }
                 }
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
-                super.mouseExited(e);
+                mouse=null;
             }
 
             @Override
@@ -61,6 +66,8 @@ public class TechnologyPane extends JPanel {
                     offsets.x+=e.getX()-previous.x;
                     offsets.y+=e.getY()-previous.y;
                 }
+                offsets.y=Math.min(0,offsets.y);
+                offsets.x=Math.min(0,offsets.x);
                 previous=e.getPoint();
             }
 
@@ -68,17 +75,15 @@ public class TechnologyPane extends JPanel {
             public void mouseMoved(MouseEvent e) {
                 mouse=calcMousePos(e.getPoint());
                 if(mouse!=null) {
-                    boolean satisfied=true;
                     Technology target=distribution.get(mouse);
-                    for(String s:target.requirements)
-                        satisfied=satisfied&&R.technologies.get(s).acquired;
-                    if(satisfied)
+                    if(target.satisfied||target.acquired)
                         setToolTipText(target.name);
                     else setToolTipText(null);
                 }else
                     setToolTipText(null);
             }
         });
+        reCalcAll();
     }
     private void initData(){
         for(Technology t:R.technologies.values())
@@ -96,11 +101,7 @@ public class TechnologyPane extends JPanel {
         if(progress>=t.time){
             ongoingTechResearch=null;
             t.acquired=true;
-            Structure s=R.structures.get(t.modifier);
-            for(String r:R.resources.keySet()){
-                s.consume.data.put(r,s.consume.data.get(r)+t.consume.data.get(r));
-                s.produce.data.put(r,s.produce.data.get(r)+t.produce.data.get(r));
-            }
+            reCalcAll();
         }
     }
 
@@ -117,7 +118,6 @@ public class TechnologyPane extends JPanel {
         for(Technology t:R.technologies.values()){
             int xLoc=t.column*blockWidth+xInterval+offsets.x;
             int yLoc=t.row*blockHeight+yInterval+offsets.y;
-            boolean satisfied=true;
             for(String s:t.requirements) {
                 Technology target=R.technologies.get(s);
                 if(target==null){
@@ -129,12 +129,7 @@ public class TechnologyPane extends JPanel {
                             "Script Error",JOptionPane.ERROR_MESSAGE);
                     System.exit(1);
                 }
-                if(target.acquired){
-                    g2.setColor(Color.GREEN);
-                }else{
-                    g2.setColor(Color.LIGHT_GRAY);
-                    satisfied=false;
-                }
+                g2.setColor(target.acquired&&target.satisfied?Color.GREEN:Color.LIGHT_GRAY);
                 g2.drawLine(target.column*blockWidth+xInterval+offsets.x+elementWidth/2,
                         target.row*blockHeight+yInterval+offsets.y+elementHeight,
                         xLoc+elementWidth/2,yLoc);
@@ -143,16 +138,16 @@ public class TechnologyPane extends JPanel {
                 g2.setColor(new Color(0,255,0,100));
                 g2.fillRect(xLoc,yLoc,(progress+1)*elementWidth/t.time,elementHeight);
             }
-            if(mouse!=null&&(satisfied||t.acquired))
+            if(mouse!=null&&(t.satisfied||t.acquired))
                 if(mouse.x==t.column&&mouse.y==t.row) {
                     g2.setColor(new Color(255,255,255,100));
                     g2.fillRect(xLoc,yLoc,elementWidth,elementHeight);
                 }
-            g2.setColor(t.acquired?(satisfied?Color.GREEN:Color.red):(satisfied?Color.YELLOW:Color.LIGHT_GRAY));
+            g2.setColor(t.acquired?(t.satisfied?Color.GREEN:Color.RED):(t.satisfied?Color.YELLOW:Color.LIGHT_GRAY));
             if(ongoingTechResearch!=null&&ongoingTechResearch.equals(t.name))
                 g2.setColor(Color.MAGENTA);
             g2.drawRect(xLoc,yLoc,elementWidth,elementHeight);
-            if(!satisfied&&!t.acquired)
+            if(!t.satisfied&&!t.acquired)
                 g2.drawString("???",xLoc+elementWidth/2-5,yLoc+elementHeight-20);
             else
                 g2.drawString(t.name,xLoc+5,yLoc+elementHeight-20);
@@ -170,5 +165,31 @@ public class TechnologyPane extends JPanel {
             return target==null?null:p;
         }
         return null;
+    }
+    public void reCalcAll(){
+        for(Technology t:R.technologies.values())
+            calcSatisfied(t);
+        for(Structure s:R.structures.values()){
+            s.produce=(ResourceGroup) R.original_structures.get(s.name).produce.clone();
+            s.consume=(ResourceGroup) R.original_structures.get(s.name).consume.clone();
+        }
+        for(Technology t:R.technologies.values()){
+            if(t.acquired&&t.satisfied){
+                Structure target=R.structures.get(t.modifier);
+                for(String res:R.resources.keySet()){
+                    target.consume.data.put(res,target.consume.data.get(res)+t.consume.data.get(res));
+                    target.produce.data.put(res,target.produce.data.get(res)+t.produce.data.get(res));
+                }
+            }
+        }
+    }
+    private boolean calcSatisfied(Technology t){
+        t.satisfied=true;
+        for(String s:t.requirements) {
+            Technology target=R.technologies.get(s);
+            if(!target.acquired||!calcSatisfied(target))
+                t.satisfied=false;
+        }
+        return t.satisfied;
     }
 }

@@ -3,12 +3,14 @@ package com.ra.ui;
 import com.ra.data.ResourceGroup;
 import com.ra.data.Structure;
 import com.ra.ui.component.*;
+import com.ra.ui.tooltip.BuildingDetailTip;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 
 /**
@@ -18,39 +20,44 @@ import java.util.Iterator;
 @GameContent
 public class GamePane extends GameContentPane {
     private Thread renderer;
-    private final BufferedImage warning=R.getImageResource("Images/warning.png");
+    private final BufferedImage warning=R.getImageResource("Images/warning.png"),
+    city=R.getImageResource("Images/city1.png");
     private final Structure[][] state=new Structure[5][5];
     private final boolean[][] lack=new boolean[5][5];
     private int mouseX=-1,mouseY=-1;
     private int optionX=-1,optionY=-1;
+    public int storageShowX=-1,storageShowY=-1;
+    public HashMap<Point,Integer> storageSelectMode=null;
     private boolean showOption=false;
     public Point building=null;
     public int labCount=0;
+    public int storageCount=0;
     public static int xOffset=100,yOffset=500,metric=100;
     protected ConstructionOption options=new ConstructionOption();
     protected BuildingOperation operation=new BuildingOperation();
-    protected TechnologyPane techPane=new TechnologyPane();
 
     @LayoutParam(offsetX=10,offsetY=10,fixedWidth=100,fixedHeight=100)
     protected final MyButton technology=new MyButton("科技");
     @LayoutParam(offsetX=10,offsetY=120,fixedWidth=100,fixedHeight=100)
-    protected final MyButton storage=new MyButton("存储");
+    public final MyButton storage=new MyButton("存储");
     @LayoutParam(anchorX=1,anchorY=1,offsetX=-1000,offsetY=-60,fixedWidth = 990,fixedHeight = 50)
     public final ResourceDisplay resource;
     @LayoutParam(offsetX=130,offsetY=80,widthRate=1,heightRate=1,fixedWidth=-140,fixedHeight=-160)
-    protected final TechnologyPane tmp=techPane;
+    public final TechnologyPane techPane=new TechnologyPane();
+    @LayoutParam(offsetX=130,offsetY=80,widthRate=1,heightRate=1,fixedWidth=-140,fixedHeight=-160)
+    public final StoragePane storagePane=new StoragePane();
 
     public GamePane(){
         super();
         setOpaque(false);
         ResourceGroup initial=new ResourceGroup();
-        initial.data.put("人口",200);
-        initial.data.put("食物",200);
-//        initial.data.put("人口",10000);
-//        initial.data.put("食物",10000);
-//        initial.data.put("能源",10000);
-//        initial.data.put("产能",10000);
-//        initial.data.put("矿石",10000);
+//        initial.data.put("人口",200);
+//        initial.data.put("食物",200);
+        initial.data.put("人口",100000);
+        initial.data.put("食物",100000);
+        initial.data.put("能源",100000);
+        initial.data.put("产能",100000);
+        initial.data.put("矿石",100000);
         resource=new ResourceDisplay(initial);
         initComponents();
         initLayout();
@@ -66,7 +73,9 @@ public class GamePane extends GameContentPane {
         });
         addImage("background",new ParameterizedImage("Images/back1.png",0,
                 new ConstraintLayout.LayoutParamClass(0.0,0.0,1.0,1.0)));
-        addImage("board",new ParameterizedImage("Images/board1.png",1,
+        addImage("board",new ParameterizedImage("Images/board1.png",2,
+                new ConstraintLayout.LayoutParamClass(0.0,0.0,1.0,1.0)));
+        addImage("cloud",new ParameterizedImage("Images/cloud1.png",1,
                 new ConstraintLayout.LayoutParamClass(0.0,0.0,1.0,1.0)));
         for (int i = 0; i < 5; i++)
             for (int j = 0; j < 5; j++)
@@ -74,9 +83,23 @@ public class GamePane extends GameContentPane {
         technology.setForeground(Color.CYAN);
         techPane.setVisible(false);
         storage.setForeground(Color.green);
+        storagePane.setVisible(false);
         technology.setActionListener(e-> {
             techPane.setVisible(!techPane.isVisible());
+            storagePane.setVisible(false);
+            storage.setText("存储");
             technology.setText(techPane.isVisible()?"关闭":"科技");
+        });
+        storage.setActionListener(e->{
+            if(storageSelectMode!=null) {
+                storageSelectMode = null;
+                storage.setText("存储");
+                return;
+            }
+            storagePane.setVisible(!storagePane.isVisible());
+            techPane.setVisible(false);
+            technology.setText("科技");
+            storage.setText(storagePane.isVisible()?"关闭":"存储");
         });
         for (int i = 0; i < 5; i++)
             for (int j = 0; j < 5; j++)
@@ -87,6 +110,19 @@ public class GamePane extends GameContentPane {
                 Point p=calcTransformedPosition(e.getPoint(),xOffset,yOffset,metric);
                 optionX=p.x;
                 optionY=p.y;
+                if(storageSelectMode!=null){
+                    switch (storageSelectMode.get(p)){
+                        case StoragePane.ORIGINAL_STORAGE:
+                        case StoragePane.STORAGE_FULL:
+                            storageSelectMode=null;
+                            break;
+                        case StoragePane.STORAGE_AVAILABLE:
+                            storagePane.callDataTransfer(p);
+                            storageSelectMode=null;
+                            break;
+                    }
+                    return;
+                }
                 showOption=optionX>=0&&optionY>=0;
                 double xMetric=metric*Math.cos(Math.atan(0.5));
                 double yMetric=metric*Math.sin(Math.atan(0.5));
@@ -149,16 +185,35 @@ public class GamePane extends GameContentPane {
         g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,RenderingHints.VALUE_INTERPOLATION_BICUBIC);
         int xMetric=(int)(metric*Math.cos(Math.atan(0.5)));
         int yMetric=(int)(metric*Math.sin(Math.atan(0.5)));
-        int xBias=xOffset+(optionX+optionY)*xMetric,yBias=yOffset+(optionX-optionY)*yMetric;
+        int xBias,yBias;
+        if(storageSelectMode!=null){
+            for(Point p:storageSelectMode.keySet()){
+                xBias=xOffset+(p.x+p.y)*xMetric;
+                yBias=yOffset+(p.x-p.y)*yMetric;
+                int stat=storageSelectMode.get(p);
+                g2.setColor(stat==StoragePane.ORIGINAL_STORAGE?Color.BLUE:stat==StoragePane.STORAGE_FULL?Color.RED:Color.CYAN);
+                g2.fillPolygon(new int[]{xBias,xBias+xMetric,xBias+xMetric*2,xBias+xMetric},
+                        new int[]{yBias,yBias-yMetric,yBias,yBias+yMetric},4);
+            }
+        }
+        if(storageShowX>=0&&storageShowY>=0){
+            xBias=xOffset+(storageShowX+storageShowY)*xMetric;
+            yBias=yOffset+(storageShowX-storageShowY)*yMetric;
+            g2.setColor(Color.MAGENTA);
+            g2.fillPolygon(new int[]{xBias,xBias+xMetric,xBias+xMetric*2,xBias+xMetric},
+                    new int[]{yBias,yBias-yMetric,yBias,yBias+yMetric},4);
+        }
         if(optionX>=0&&optionY>=0){
+            xBias=xOffset+(optionX+optionY)*xMetric;
+            yBias=yOffset+(optionX-optionY)*yMetric;
             g2.setStroke(new BasicStroke(3f));
             g2.setColor(Color.white);
             g2.drawPolygon(new int[]{xBias,xBias+xMetric,xBias+xMetric*2,xBias+xMetric},
                     new int[]{yBias,yBias-yMetric,yBias,yBias+yMetric},4);
         }
-        xBias=xOffset+(mouseX+mouseY)*xMetric;
-        yBias=yOffset+(mouseX-mouseY)*yMetric;
         if(mouseX>=0&&mouseY>=0){
+            xBias=xOffset+(mouseX+mouseY)*xMetric;
+            yBias=yOffset+(mouseX-mouseY)*yMetric;
             g2.setColor(new Color(255,255,255,100));
             g2.fillPolygon(new int[]{xBias,xBias+xMetric,xBias+xMetric*2,xBias+xMetric},
                     new int[]{yBias,yBias-yMetric,yBias,yBias+yMetric},4);
@@ -172,6 +227,7 @@ public class GamePane extends GameContentPane {
                 if(lack[i][j])
                     g2.drawImage(warning,(int)(xBias+0.5*metric),(int)(yBias-metric*0.5),(int)(0.5*metric),(int)(0.5*metric),this);
             }
+        g2.drawImage(city,0,0,getWidth(),getHeight(),this);
         super.paintChildren(g);
     }
 
@@ -211,12 +267,21 @@ public class GamePane extends GameContentPane {
             state[p.x][p.y]=R.structures.get(structure);
             if(structure.equals("科研中心"))
                 labCount++;
+            else if(structure.equals("数据中心")) {
+                storagePane.callStorageConstructed(p);
+                storageCount++;
+            }
             building=null;
         });
     }
     public void callDestroy(){
         if(state[optionX][optionY].name.equals("科研中心"))
             labCount--;
+        else if(state[optionX][optionY].name.equals("数据中心")) {
+            storagePane.callStorageDestructed(new Point(optionX,optionY));
+            techPane.reCalcAll();
+            storageCount--;
+        }
         state[optionX][optionY]=null;
         remove(operation);
         revalidate();
@@ -242,10 +307,7 @@ public class GamePane extends GameContentPane {
                 boolean isLack=false;
                 for(String s:target.consume.data.keySet()) {
                     if ( update.data.get(s) + resource.data.data.get(s) - target.consume.data.get(s)< 0) {
-                        if(target.name.equals("科研中心")&&requiredLab<=0)
-                            isLack=false;
-                        else
-                            isLack=true;
+                        isLack= !target.name.equals("科研中心") || requiredLab > 0;
                         break;
                     }
                 }
@@ -281,7 +343,7 @@ public class GamePane extends GameContentPane {
         double angle=Math.atan((double)(origin.y-yOffset)/(double)(origin.x-xOffset));
         double lAngle=Math.atan(2)*2;
         angle+=Math.atan(0.5);
-        if(angle<0||angle>2*Math.atan(0.5)){
+        if(origin.x<xOffset||angle<0||angle>2*Math.atan(0.5)){
             x=y=-1;
         }else {
             int ty = (int) (dist * Math.sin(angle) / Math.sin(lAngle));

@@ -1,4 +1,4 @@
-package com.ra.ui.component;
+package com.ra.ui.tooltip;
 
 import com.ra.data.ResourceGroup;
 import com.ra.data.Technology;
@@ -13,7 +13,7 @@ public class TechDetailTip extends JToolTip {
     public TechDetailTip(){
         super();
         setOpaque(false);
-        setBackground(new Color(0,0,0,100));
+        setBackground(new Color(0,0,0));
     }
 
     @Override
@@ -31,20 +31,31 @@ public class TechDetailTip extends JToolTip {
     public void paint(Graphics g) {
         Graphics2D g2=(Graphics2D)g;
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        g2.setColor(new Color(0,0,0,100));
+        g2.setColor(new Color(0,0,0));
         g2.fillRect(0,0,getWidth(),getHeight());
         g2.setFont(R.F);
         Technology target= R.technologies.get(tech);
-        int labCount=R.M.getContent(GamePane.class).labCount;
+        GamePane src=R.M.getContent(GamePane.class);
         if(target.acquired){
-            g2.setColor(Color.GREEN);
-            g2.drawString("已获得！",0,25);
-        }else if(labCount<=0){
+            if(target.satisfied) {
+                g2.setColor(Color.GREEN);
+                g2.drawString("已获得！", 0, 25);
+            }else {
+                g2.setColor(Color.RED);
+                g2.drawString("缺失前置研究", 0, 25);
+            }
+        }else if(src.labCount<=0){
             g2.setColor(Color.RED);
             g2.drawString("缺少科研中心",0,25);
-        }else {
+        }else if(tech.equals(src.techPane.ongoingTechResearch)){
+            g2.setColor(Color.MAGENTA);
+            g2.drawString("研发中，剩余约"+(target.time-src.techPane.progress)/src.labCount+"秒",0,25);
+        }else if(!src.storagePane.hasSpace()){
+            g2.setColor(Color.RED);
+            g2.drawString("存储空间不足",0,25);
+        } else{
             g2.setColor(Color.WHITE);
-            g2.drawString("预计所需时间：" + target.time / labCount, 0, 25);
+            g2.drawString("预计研发需要" + target.time / src.labCount+"秒", 0, 25);
         }
         g2.setColor(Color.WHITE);
         g2.drawString("对于\""+target.modifier+"\"",0,55);

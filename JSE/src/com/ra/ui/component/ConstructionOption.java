@@ -3,6 +3,7 @@ package com.ra.ui.component;
 import com.ra.data.ResourceGroup;
 import com.ra.ui.GamePane;
 import com.ra.ui.R;
+import com.ra.ui.tooltip.StructureDetailTip;
 
 import javax.swing.*;
 import java.awt.*;

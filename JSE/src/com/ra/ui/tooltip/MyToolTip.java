@@ -1,4 +1,4 @@
-package com.ra.ui.component;
+package com.ra.ui.tooltip;
 
 import com.ra.ui.R;
 import sun.font.FontDesignMetrics;
@@ -11,7 +11,7 @@ public class MyToolTip extends JToolTip {
     public MyToolTip(){
         super();
         setOpaque(false);
-        setBackground(new Color(0,0,0,0));
+        setBackground(new Color(0,0,0));
     }
 
     @Override
@@ -24,7 +24,7 @@ public class MyToolTip extends JToolTip {
     public void paint(Graphics g) {
         Graphics2D g2=(Graphics2D)g;
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        g.setColor(new Color(0,0,0,100));
+        g.setColor(new Color(0,0,0));
         g.fillRect(0,0,getWidth(),getHeight());
         g.setFont(R.F);
         g.setColor(Color.WHITE);

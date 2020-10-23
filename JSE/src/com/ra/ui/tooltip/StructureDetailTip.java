@@ -1,4 +1,4 @@
-package com.ra.ui.component;
+package com.ra.ui.tooltip;
 
 import com.ra.data.ResourceGroup;
 import com.ra.data.Structure;
@@ -12,7 +12,7 @@ public class StructureDetailTip extends JToolTip {
     public StructureDetailTip(){
         super();
         setOpaque(false);
-        setBackground(new Color(0,0,0,100));
+        setBackground(new Color(0,0,0));
     }
 
     @Override
@@ -30,7 +30,7 @@ public class StructureDetailTip extends JToolTip {
     public void paint(Graphics g) {
         Graphics2D g2=(Graphics2D)g;
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        g2.setColor(new Color(0,0,0,100));
+        g2.setColor(new Color(0,0,0));
         g2.fillRect(0,0,getWidth(),getHeight());
         g2.setColor(Color.WHITE);
         g2.setFont(R.F);

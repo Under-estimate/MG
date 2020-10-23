@@ -2,13 +2,13 @@ package com.ra.ui.component;
 
 import com.ra.data.ResourceGroup;
 import com.ra.ui.R;
+import com.ra.ui.tooltip.MyToolTip;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
-import java.util.Iterator;
 import java.util.concurrent.Future;
 
 /**
@@ -87,7 +87,9 @@ public class ResourceDisplay extends JPanel {
 
     @Override
     public JToolTip createToolTip() {
-        return new MyToolTip();
+        MyToolTip tip=new MyToolTip();
+        tip.setComponent(this);
+        return tip;
     }
 
     @Override

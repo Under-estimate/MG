@@ -41,6 +41,7 @@ public class R {
     public static HashMap<String, Resource> resources;
     /**所有建筑类型*/
     public static HashMap<String, Structure> structures;
+    public static HashMap<String, Structure> original_structures;
     /**所有科技类型*/
     public static HashMap<String, Technology> technologies;
 
@@ -76,6 +77,7 @@ public class R {
             loading.setText("Loading structure.xml");
             d=builder.parse(loader.getResourceAsStream("Scripts/structure.xml"));
             structures=new HashMap<>();
+            original_structures=new HashMap<>();
             forEachElement(d.getDocumentElement(), "structure", e -> {
                 Structure s=new Structure(e.getAttribute("name"),e.getAttribute("description"),Integer.parseInt(e.getAttribute("time")));
                 s.image=getImageResource("Images/"+s.name+".png");
@@ -86,6 +88,7 @@ public class R {
                 forEachElement((Element)e.getElementsByTagName("produce").item(0),"resource",
                         ele->s.produce.data.put(ele.getAttribute("name"),Integer.parseInt(ele.getTextContent())));
                 structures.put(s.name,s);
+                original_structures.put(s.name,s.clone());
             });
             loading.setText("loading technology.xml");
             d=builder.parse(loader.getResourceAsStream("Scripts/technology.xml"));
