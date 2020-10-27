@@ -6,6 +6,8 @@ public class Technology {
     public int time;
     public String modifier;
     public ResourceGroup consume,produce;
+    public int unlockLevel=-1;
+    public int era;
 
     public int column=0,row=0;
 

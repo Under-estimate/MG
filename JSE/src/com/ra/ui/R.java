@@ -18,10 +18,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Objects;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -36,7 +33,7 @@ public class R {
     public static MainFrame M;
     /**主字体*/
     public static Font F=new Font("Microsoft YaHei",Font.PLAIN,20);
-    public static ThreadPoolExecutor exec;
+    public static ScheduledThreadPoolExecutor exec;
     /**所有资源类型*/
     public static HashMap<String, Resource> resources;
     /**所有建筑类型*/
@@ -51,7 +48,7 @@ public class R {
     public static void initResources(){
         loading=new LoadingFrame();
         loading.setVisible(true);
-        exec=new ThreadPoolExecutor(3, 10, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), (r, executor) -> System.err.println("A task failed to execute."));
+        exec=new ScheduledThreadPoolExecutor(3);
         loadXMLs();
         M=new MainFrame();
         loading.setVisible(false);
@@ -72,21 +69,26 @@ public class R {
             forEachElement(d.getDocumentElement(),"resource", e->{
                 Resource r=new Resource(e.getTextContent(),e.getAttribute("description"));
                 r.image=getImageResource("Images/"+r.name+".png");
+                r.instant=Boolean.parseBoolean(e.getAttribute("instant"));
                 resources.put(r.name,r);
             });
             loading.setText("Loading structure.xml");
             d=builder.parse(loader.getResourceAsStream("Scripts/structure.xml"));
             structures=new HashMap<>();
             original_structures=new HashMap<>();
+            String[] types={Structure.BUILD,Structure.CONSUME,Structure.PRODUCE};
             forEachElement(d.getDocumentElement(), "structure", e -> {
-                Structure s=new Structure(e.getAttribute("name"),e.getAttribute("description"),Integer.parseInt(e.getAttribute("time")));
-                s.image=getImageResource("Images/"+s.name+".png");
-                forEachElement((Element)e.getElementsByTagName("build").item(0),"resource",
-                        ele->s.build.data.put(ele.getAttribute("name"),Integer.parseInt(ele.getTextContent())));
-                forEachElement((Element)e.getElementsByTagName("consume").item(0),"resource",
-                        ele->s.consume.data.put(ele.getAttribute("name"),Integer.parseInt(ele.getTextContent())));
-                forEachElement((Element)e.getElementsByTagName("produce").item(0),"resource",
-                        ele->s.produce.data.put(ele.getAttribute("name"),Integer.parseInt(ele.getTextContent())));
+                Structure s=new Structure(e.getAttribute("name"),e.getAttribute("description"));
+                s.images.put(1,getImageResource("Images/"+s.name+"1.png"));
+                s.images.put(2,getImageResource("Images/"+s.name+"2.png"));
+                forEachElement(e,"level",el->{
+                    s.times.put(Integer.parseInt(el.getAttribute("num")),
+                            Integer.parseInt(el.getAttribute("time")));
+                    for (String type : types)
+                        forEachElement((Element) e.getElementsByTagName(type).item(0), "resource",
+                                ele -> s.getRG(Integer.parseInt(el.getAttribute("num")), type).data.put(ele.getAttribute("name")
+                                        , Integer.parseInt(ele.getTextContent())));
+                });
                 structures.put(s.name,s);
                 original_structures.put(s.name,s.clone());
             });
@@ -97,6 +99,7 @@ public class R {
                 Technology t=new Technology(e.getAttribute("name"),e.getAttribute("target"),Integer.parseInt(e.getAttribute("time")));
                 t.column=Integer.parseInt(e.getAttribute("column"));
                 t.row=Integer.parseInt(e.getAttribute("row"));
+                t.era=Integer.parseInt(e.getAttribute("era"));
                 ArrayList<String> trl=new ArrayList<>();
                 forEachElement((Element)e.getElementsByTagName("requirements").item(0),"requirement",
                         ele->trl.add(ele.getTextContent()));
@@ -107,6 +110,9 @@ public class R {
                         ele->t.consume.data.put(ele.getAttribute("name"),Integer.parseInt(ele.getTextContent())));
                 forEachElement((Element)e.getElementsByTagName("produce").item(0),"resource",
                         ele->t.produce.data.put(ele.getAttribute("name"),Integer.parseInt(ele.getTextContent())));
+                NodeList list=e.getElementsByTagName("unlock");
+                if(list.getLength()==1)
+                    t.unlockLevel=Integer.parseInt(list.item(0).getTextContent());
                 technologies.put(t.name,t);
             });
         }catch (Exception e){

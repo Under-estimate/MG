@@ -1,17 +1,21 @@
 package com.ra.ui;
 
+import com.ra.data.RealTimeData;
 import com.ra.data.ResourceGroup;
 import com.ra.data.Structure;
 import com.ra.ui.component.*;
 import com.ra.ui.tooltip.BuildingDetailTip;
 
 import javax.swing.*;
+import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 游戏主界面。(仍在开发中)
@@ -19,22 +23,49 @@ import java.util.Iterator;
  * */
 @GameContent
 public class GamePane extends GameContentPane {
-    private Thread renderer;
-    private final BufferedImage warning=R.getImageResource("Images/warning.png"),
-    city=R.getImageResource("Images/city1.png");
-    private final Structure[][] state=new Structure[5][5];
-    private final boolean[][] lack=new boolean[5][5];
-    private int mouseX=-1,mouseY=-1;
-    private int optionX=-1,optionY=-1;
+    public static final String DROUGHT="旱灾",FREEZE="严寒",EARTHQUAKE="地震";
+    public static String[] disasters={DROUGHT,FREEZE,EARTHQUAKE};
+
+    /**提示建筑停工的图像*/
+    private final BufferedImage warning=R.getImageResource("Images/warning.png");
+    /**前景城市*/
+    private BufferedImage city=R.getImageResource("Images/city1.png");
+    private BufferedImage city_trans=R.getImageResource("Images/city1_transparent.png");
+    /**场上的建筑物信息*/
+    public final RealTimeData[][] info=new RealTimeData[6][6];
+    /**鼠标所处的网格坐标*/
+    public int mouseX=-1,mouseY=-1;
+    /**选中的网格坐标*/
+    public int optionX=-1,optionY=-1;
+    /**展示存储位置的网格坐标*/
     public int storageShowX=-1,storageShowY=-1;
+    /**数据迁移时一些网格的属性*/
     public HashMap<Point,Integer> storageSelectMode=null;
+    /**是否显示选项*/
     private boolean showOption=false;
+    /**正在建造的坐标*/
     public Point building=null;
+    /**科研中心计数*/
     public int labCount=0;
-    public int storageCount=0;
+    /**上一次资源结算后经过的tick数*/
+    private int resourceCounter=0;
+    /**当前建筑进度（秒）*/
+    private int currentBuildProgress=0;
+    /**正在建筑的进程*/
+    private ScheduledFuture<?> buildFuture=null;
+    private int currentPhase=0;
+    public Color paintOver=new Color(0,0,0,0);
+    public String nextDisaster=null;
+    public int nextDisasterLevel=-1;
+    public int beforeDisaster=60;
+    public boolean pauseResourceModification=false;
+    /**网格参数*/
     public static int xOffset=100,yOffset=500,metric=100;
+
+
     protected ConstructionOption options=new ConstructionOption();
     protected BuildingOperation operation=new BuildingOperation();
+    public ResistOption resist=new ResistOption();
 
     @LayoutParam(offsetX=10,offsetY=10,fixedWidth=100,fixedHeight=100)
     protected final MyButton technology=new MyButton("科技");
@@ -46,18 +77,15 @@ public class GamePane extends GameContentPane {
     public final TechnologyPane techPane=new TechnologyPane();
     @LayoutParam(offsetX=130,offsetY=80,widthRate=1,heightRate=1,fixedWidth=-140,fixedHeight=-160)
     public final StoragePane storagePane=new StoragePane();
+    @LayoutParam(anchorX=1,offsetX=-510,offsetY=10,fixedWidth=500,fixedHeight=50)
+    public final JTextField information=new JTextField();
 
     public GamePane(){
         super();
         setOpaque(false);
         ResourceGroup initial=new ResourceGroup();
-//        initial.data.put("人口",200);
-//        initial.data.put("食物",200);
-        initial.data.put("人口",100000);
-        initial.data.put("食物",100000);
-        initial.data.put("能源",100000);
-        initial.data.put("产能",100000);
-        initial.data.put("矿石",100000);
+        initial.data.put("产能",1000);
+        initial.data.put("食物",100);
         resource=new ResourceDisplay(initial);
         initComponents();
         initLayout();
@@ -68,18 +96,25 @@ public class GamePane extends GameContentPane {
             public void componentResized(ComponentEvent e) {
                 xOffset=(int)(0.23*getWidth());
                 yOffset=(int)(0.57*getHeight());
-                metric=(int)(0.055*getWidth());
+                metric=(int)(0.05*getWidth());
             }
         });
-        addImage("background",new ParameterizedImage("Images/back1.png",0,
-                new ConstraintLayout.LayoutParamClass(0.0,0.0,1.0,1.0)));
-        addImage("board",new ParameterizedImage("Images/board1.png",2,
-                new ConstraintLayout.LayoutParamClass(0.0,0.0,1.0,1.0)));
-        addImage("cloud",new ParameterizedImage("Images/cloud1.png",1,
-                new ConstraintLayout.LayoutParamClass(0.0,0.0,1.0,1.0)));
-        for (int i = 0; i < 5; i++)
-            for (int j = 0; j < 5; j++)
-                lack[i][j]=false;
+        callPhaseChange(1);
+        for (int i = 0; i < info.length; i++)
+            for (int j = 0; j < info[i].length; j++)
+                info[i][j] = new RealTimeData();
+        info[5][5].structure=R.structures.get("数据中心");
+        storagePane.callStorageConstructed(new Point(5,5));
+        info[0][5].structure=R.structures.get("农田");
+        info[1][5].structure=R.structures.get("民居");
+        information.setBackground(Color.BLACK);
+        information.setForeground(Color.WHITE);
+        information.setSelectedTextColor(Color.WHITE);
+        information.setSelectionColor(Color.BLACK);
+        information.setEditable(false);
+        information.setBorder(new LineBorder(Color.WHITE));
+        information.setFont(R.F);
+        information.setText("...");
         technology.setForeground(Color.CYAN);
         techPane.setVisible(false);
         storage.setForeground(Color.green);
@@ -101,9 +136,6 @@ public class GamePane extends GameContentPane {
             technology.setText("科技");
             storage.setText(storagePane.isVisible()?"关闭":"存储");
         });
-        for (int i = 0; i < 5; i++)
-            for (int j = 0; j < 5; j++)
-                state[i][j]=null;
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -129,10 +161,11 @@ public class GamePane extends GameContentPane {
                 double xBias=xOffset+(optionX+optionY)*xMetric,yBias=yOffset+(optionX-optionY)*yMetric;
                 remove(options);
                 remove(operation);
+                remove(resist);
                 if(showOption){
                     ConstraintLayout.LayoutParamClass param=new ConstraintLayout.LayoutParamClass
                             ((int)(xBias-xMetric*0.7),(int)(yBias-yMetric*3),metric*3,metric*3);
-                    if(state[optionX][optionY]==null)
+                    if(info[optionX][optionY].structure==null)
                         add(options,param);
                     else
                         add(operation,param);
@@ -151,30 +184,24 @@ public class GamePane extends GameContentPane {
                 Point p=calcTransformedPosition(e.getPoint(),xOffset,yOffset,metric);
                 mouseX=p.x;
                 mouseY=p.y;
-                if(mouseX>=0&&mouseY>=0&&state[mouseX][mouseY]!=null)
-                    setToolTipText(state[mouseX][mouseY].name);
+                if(mouseX>=0&&mouseY>=0&&info[mouseX][mouseY].structure!=null)
+                    setToolTipText(info[mouseX][mouseY].structure.name);
                 else
                     setToolTipText(null);
             }
         });
-        renderer=new Thread(()->{
-            int counter=0;
-            while(true){
+        R.exec.scheduleAtFixedRate(()->{
+            try {
                 GamePane.this.repaint();
-                counter++;
-                if(counter>=20) {
-                    R.exec.execute(this::calcResourceModification);
-                    counter=0;
+                resourceCounter++;
+                if (resourceCounter >= 20) {
+                    calcResourceModification();
+                    resourceCounter = 0;
                 }
-                try {
-                    Thread.sleep(50);
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
+            }catch (Exception e){
+                e.printStackTrace();
             }
-        },"Renderer");
-        renderer.setDaemon(true);
-        renderer.start();
+        },0,50, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -218,16 +245,21 @@ public class GamePane extends GameContentPane {
             g2.fillPolygon(new int[]{xBias,xBias+xMetric,xBias+xMetric*2,xBias+xMetric},
                     new int[]{yBias,yBias-yMetric,yBias,yBias+yMetric},4);
         }
-        for (int i = 0; i < 5; i++)
-            for (int j = 0; j < 5; j++){
+        for (int i = 0; i < info.length; i++)
+            for (int j = 0; j < info.length; j++){
                 xBias=xOffset+(i+j)*xMetric;
                 yBias=yOffset+(i-j)*yMetric;
-                if(state[i][j]!=null)
-                    g2.drawImage(state[i][j].image,(int)(xBias+0.2*metric),(int)(yBias-metric*1.2),(int)(1.5*metric),(int)(1.5*metric),this);
-                if(lack[i][j])
+                if(info[i][j].structure!=null)
+                    g2.drawImage(info[i][j].getImage(),(int)(xBias-0.1*metric),(int)(yBias-metric*1.4),2*metric,2*metric,this);
+                if(info[i][j].lack)
                     g2.drawImage(warning,(int)(xBias+0.5*metric),(int)(yBias-metric*0.5),(int)(0.5*metric),(int)(0.5*metric),this);
             }
-        g2.drawImage(city,0,0,getWidth(),getHeight(),this);
+        if(mouseY==0)
+            g2.drawImage(city_trans,0,0,getWidth(),getHeight(),this);
+        else
+            g2.drawImage(city,0,0,getWidth(),getHeight(),this);
+        g2.setColor(paintOver);
+        g2.fillRect(0,0,getWidth(),getHeight());
         super.paintChildren(g);
     }
 
@@ -235,67 +267,98 @@ public class GamePane extends GameContentPane {
     public JToolTip createToolTip() {
         return new BuildingDetailTip();
     }
-
     public void callBuild(String structure){
         showOption=false;
         remove(options);
-        R.exec.execute(()->{
-            Point p=new Point(optionX,optionY);
-            building=p;
-            ConstructingPane construction=new ConstructingPane();
-            double xMetric=metric*Math.cos(Math.atan(0.5));
-            double yMetric=metric*Math.sin(Math.atan(0.5));
-            double xBias=xOffset+(optionX+optionY)*xMetric,yBias=yOffset+(optionX-optionY)*yMetric;
-            ConstraintLayout.LayoutParamClass param=new ConstraintLayout.LayoutParamClass(
-                    (int)(xBias+0.2*metric),(int)(yBias-metric*1.2),metric,metric);
-            add(construction,param);
-            revalidate();
-            Structure target=R.structures.get(structure);
-            ResourceGroup group=new ResourceGroup();
-            for(String s:R.resources.keySet())
-                group.data.put(s,-target.build.data.get(s));
-            resource.submitChange(group);
-            for (int i = 0; i < target.time; i++) {
-                construction.progress=(i+1)/(double)target.time;
-                try{
-                    Thread.sleep(1000);
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
-            }
+        Point p=new Point(optionX,optionY);
+        building=p;
+        ConstructingPane construction=new ConstructingPane();
+        double xMetric=metric*Math.cos(Math.atan(0.5));
+        double yMetric=metric*Math.sin(Math.atan(0.5));
+        double xBias=xOffset+(optionX+optionY)*xMetric,yBias=yOffset+(optionX-optionY)*yMetric;
+        ConstraintLayout.LayoutParamClass param=new ConstraintLayout.LayoutParamClass(
+                (int)(xBias+0.2*metric),(int)(yBias-metric*1.2),metric,metric);
+        add(construction,param);
+        revalidate();
+        Structure target=R.structures.get(structure);
+        ResourceGroup group=target.getRG(1,Structure.BUILD).negate();
+        resource.submitVariable(group);
+        buildFuture=R.exec.scheduleAtFixedRate(()->{
+            construction.progress=(currentBuildProgress+1)/(double)target.times.get(1);
+            currentBuildProgress++;
+            if(currentBuildProgress<target.times.get(1))
+                return;
             remove(construction);
-            state[p.x][p.y]=R.structures.get(structure);
+            info[p.x][p.y].structure=R.structures.get(structure);
             if(structure.equals("科研中心"))
                 labCount++;
             else if(structure.equals("数据中心")) {
                 storagePane.callStorageConstructed(p);
-                storageCount++;
             }
             building=null;
-        });
+            buildFuture.cancel(false);
+            buildFuture=null;
+            currentBuildProgress=0;
+        },0,1,TimeUnit.SECONDS);
     }
     public void callDestroy(){
-        if(state[optionX][optionY].name.equals("科研中心"))
+        callDestroy(optionX,optionY);
+    }
+    public void callDestroy(int x,int y){
+        if(info[x][y].structure.name.equals("科研中心"))
             labCount--;
-        else if(state[optionX][optionY].name.equals("数据中心")) {
-            storagePane.callStorageDestructed(new Point(optionX,optionY));
+        else if(info[x][y].structure.name.equals("数据中心")) {
+            storagePane.callStorageDestructed(new Point(x,y));
             techPane.reCalcAll();
-            storageCount--;
         }
-        state[optionX][optionY]=null;
+        info[x][y].structure=null;
         remove(operation);
         revalidate();
     }
+    public void callUpgrade(){
+        showOption=false;
+        remove(operation);
+        Point p=new Point(optionX,optionY);
+        building=p;
+        ConstructingPane construction=new ConstructingPane();
+        double xMetric=metric*Math.cos(Math.atan(0.5));
+        double yMetric=metric*Math.sin(Math.atan(0.5));
+        double xBias=xOffset+(optionX+optionY)*xMetric,yBias=yOffset+(optionX-optionY)*yMetric;
+        ConstraintLayout.LayoutParamClass param=new ConstraintLayout.LayoutParamClass(
+                (int)(xBias+0.2*metric),(int)(yBias-metric*1.2),metric,metric);
+        add(construction,param);
+        revalidate();
+        RealTimeData target=info[optionX][optionY];
+        ResourceGroup group=target.structure.getRG(target.level+1,Structure.BUILD).negate();
+        resource.submitChange(group);
+        buildFuture=R.exec.scheduleAtFixedRate(()->{
+            int time=target.structure.times.get(target.level+1);
+            construction.progress=(currentBuildProgress+1)/(double)time;
+            currentBuildProgress++;
+            if(currentBuildProgress<time)
+                return;
+            remove(construction);
+            info[p.x][p.y].level++;
+            if(info[p.x][p.y].structure.name.equals("数据中心"))
+                storagePane.callStorageUpgraded(p);
+            building=null;
+            buildFuture.cancel(false);
+            buildFuture=null;
+            currentBuildProgress=0;
+        },0,1,TimeUnit.SECONDS);
+    }
     private void calcResourceModification(){
+        if(pauseResourceModification)
+            return;
         boolean hasChange=true;
         int remainResearchProgress=0;
         if(techPane.ongoingTechResearch!=null)
             remainResearchProgress=R.technologies.get(techPane.ongoingTechResearch).time-techPane.progress;
         ResourceGroup update=new ResourceGroup();
         ArrayList<Point> lacking=new ArrayList<>();
-        for (int i = 0; i < 5; i++)
-            for (int j = 0; j < 5; j++)
-                if (state[i][j] != null)
+        for (int i = 0; i < info.length; i++)
+            for (int j = 0; j < info[i].length; j++)
+                if (info[i][j].structure != null)
                     lacking.add(new Point(i, j));
         int requiredLab=Math.min(labCount,remainResearchProgress);
         while(hasChange) {
@@ -303,21 +366,19 @@ public class GamePane extends GameContentPane {
             Iterator<Point> it=lacking.iterator();
             while(it.hasNext()){
                 Point p=it.next();
-                Structure target=state[p.x][p.y];
+                RealTimeData target=info[p.x][p.y];
                 boolean isLack=false;
-                for(String s:target.consume.data.keySet()) {
-                    if ( update.data.get(s) + resource.data.data.get(s) - target.consume.data.get(s)< 0) {
-                        isLack= !target.name.equals("科研中心") || requiredLab > 0;
+                for(String s:target.getRG(Structure.CONSUME).data.keySet()) {
+                    if ( update.data.get(s) + resource.data.data.get(s) - target.getRG(Structure.CONSUME).data.get(s)< 0) {
+                        isLack= !target.structure.name.equals("科研中心") || requiredLab > 0;
                         break;
                     }
                 }
                 if(!isLack) {
-                    if(!target.name.equals("科研中心")){
-                        for (String s : R.resources.keySet())
-                            update.data.put(s, update.data.get(s) + target.produce.data.get(s) - target.consume.data.get(s));
+                    if(!target.structure.name.equals("科研中心")){
+                        update=update.add(target.getRG(Structure.PRODUCE)).sub(target.getRG(Structure.CONSUME));
                     }else if(requiredLab > 0){
-                        for (String s : R.resources.keySet())
-                            update.data.put(s, update.data.get(s) + target.produce.data.get(s) - target.consume.data.get(s));
+                        update=update.add(target.getRG(Structure.PRODUCE)).sub(target.getRG(Structure.CONSUME));
                         requiredLab--;
                     }
                     it.remove();
@@ -325,14 +386,149 @@ public class GamePane extends GameContentPane {
                 }
             }
         }
-        for (int i = 0; i < 5; i++)
-            for (int j = 0; j < 5; j++)
-                lack[i][j]=false;
+        for (int i = 0; i < info.length; i++)
+            for (int j = 0; j < info[i].length; j++)
+                info[i][j].lack=false;
         for(Point p:lacking)
-            lack[p.x][p.y]=true;
+            info[p.x][p.y].lack=true;
         resource.submitChange(update);
         if(techPane.ongoingTechResearch!=null)
             techPane.updateProgress(labCount-requiredLab);
+        beforeDisaster--;
+        if(nextDisaster!=null) {
+            if(beforeDisaster>60)
+                information.setText("下一次灾难将在" + beforeDisaster + "s后降临。");
+            else if(beforeDisaster>30)
+                information.setText("下一次"+nextDisasterLevel+"级灾难将在"+beforeDisaster+"s后降临。");
+            else
+                information.setText("下一次"+nextDisasterLevel+"级"+nextDisaster+"将在"+beforeDisaster+"s后降临。");
+        }
+        if(beforeDisaster<=0&&nextDisaster!=null){
+            R.exec.execute(()->{
+                pauseResourceModification=true;
+                try{
+                    Color over=null;
+                    String image=null;
+                    switch (nextDisaster){
+                        case DROUGHT:
+                            information.setBackground(Color.YELLOW);
+                            information.setForeground(Color.RED);
+                            information.setText("警告：过于炎热");
+                            over=new Color(255,255,200);
+                            image="Images/atmos_hot.png";
+                        case FREEZE:
+                            if(over==null) {
+                                information.setBackground(Color.BLACK);
+                                information.setForeground(Color.CYAN);
+                                information.setText("警告：异常寒冷");
+                                over = new Color(0, 0, 50);
+                                image = "Images/atmos_cold.png";
+                            }
+                            paintOverTransition(over,0,255);
+                            addImage("atmos",new ParameterizedImage(image,2,
+                                    new ConstraintLayout.LayoutParamClass(0.0,0.0,1.0,1.0)));
+                            paintOverTransition(over,255,100);
+                            Thread.sleep(3000);
+                            paintOverTransition(over,100,255);
+                            calcDisasterLoss();
+                            addImage("atmos",new ParameterizedImage("Images/atmos"+currentPhase+".png",2,
+                                    new ConstraintLayout.LayoutParamClass(0.0,0.0,1.0,1.0)));
+                            paintOverTransition(over,255,0);
+                            paintOver=new Color(0,0,0,0);
+                            break;
+                        case EARTHQUAKE:
+                            information.setBackground(Color.BLACK);
+                            information.setForeground(Color.YELLOW);
+                            information.setText("警告：大陆不稳定");
+                            for (int i = 0; i < 20; i++) {
+                                R.M.setContentOffset((int)(20*Math.random()-10),(int)(20*Math.random()-10));
+                                Thread.sleep(50);
+                            }
+                            calcDisasterLoss();
+                            for (int i = 0; i < 20; i++) {
+                                R.M.setContentOffset((int)(20*Math.random()-10),(int)(20*Math.random()-10));
+                                Thread.sleep(50);
+                            }
+                            R.M.setContentOffset(0,0);
+                            break;
+                    }
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+                nextDisaster=disasters[(int)(3*Math.random())];
+                beforeDisaster=60+(int)(120*Math.random());
+                nextDisasterLevel=(int)(3*Math.random())+1;
+                pauseResourceModification=false;
+            });
+        }
+        if(beforeDisaster<=0&&nextDisaster==null){
+            beforeDisaster=60+(int)(120*Math.random());
+            nextDisaster=disasters[(int)(3*Math.random())];
+            nextDisasterLevel=(int)(3*Math.random())+1;
+        }
+        information.setBackground(Color.BLACK);
+        information.setForeground(Color.white);
+    }
+    private void calcDisasterLoss() {
+        for (int i = 0; i < info.length; i++) {
+            for (int j = 0; j < info[i].length; j++) {
+                if(info[i][j].structure==null)
+                    continue;
+                int delta=nextDisasterLevel-info[i][j].resistance.get(nextDisaster);
+                if(delta<=0)
+                    continue;
+                if(Math.random()<(1.0/(delta+1)))
+                    callDestroy(i,j);
+            }
+        }
+    }
+    private void paintOverTransition(Color base,int from,int to){
+        try{
+            if(from<to)
+                for (int i = from; i<=to; i+=10) {
+                    paintOver=new Color(base.getRed(),base.getGreen(),base.getBlue(),Math.max(0,Math.min(i,255)));
+                    Thread.sleep(50);
+                }
+            else
+                for (int i = from; i>=to; i-=10) {
+                    paintOver=new Color(base.getRed(),base.getGreen(),base.getBlue(),Math.max(0,Math.min(i,255)));
+                    Thread.sleep(50);
+                }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+    }
+    public void callPhaseChange(int phase){
+        if(phase==currentPhase)
+            return;
+        currentPhase=phase;
+        addImage("background",new ParameterizedImage("Images/back"+phase+".png",0,
+                new ConstraintLayout.LayoutParamClass(0.0,0.0,1.0,1.0)));
+        addImage("board",new ParameterizedImage("Images/board"+phase+".png",3,
+                new ConstraintLayout.LayoutParamClass(0.0,0.0,1.0,1.0)));
+        addImage("cloud",new ParameterizedImage("Images/cloud"+phase+".png",1,
+                new ConstraintLayout.LayoutParamClass(0.0,0.0,1.0,1.0)));
+        addImage("atmos",new ParameterizedImage("Images/atmos"+phase+".png",2,
+                new ConstraintLayout.LayoutParamClass(0.0,0.0,1.0,1.0)));
+        city=R.getImageResource("Images/city"+phase+".png");
+        city_trans=R.getImageResource("Images/city"+phase+"_transparent.png");
+    }
+    public void callShowResistOption(){
+        remove(operation);
+        double xMetric=metric*Math.cos(Math.atan(0.5));
+        double yMetric=metric*Math.sin(Math.atan(0.5));
+        double xBias=xOffset+(optionX+optionY)*xMetric,yBias=yOffset+(optionX-optionY)*yMetric;
+        ConstraintLayout.LayoutParamClass param=new ConstraintLayout.LayoutParamClass
+                ((int)(xBias-xMetric*0.7),(int)(yBias-yMetric*3),metric*3,metric*3);
+        add(resist,param);
+        revalidate();
+    }
+    public void callResistanceUpdate(String type){
+        showOption=false;
+        remove(resist);
+        RealTimeData target=info[optionX][optionY];
+        resource.submitVariable(R.structures.get("灾难预防").getRG(target.resistance.get(type)+1,Structure.BUILD).negate());
     }
     /**
      * 计算鼠标点击处对应的区域坐标。
@@ -351,8 +547,8 @@ public class GamePane extends GameContentPane {
             int tx = (int) (dist * Math.sin(angle) / Math.sin(lAngle));
             tx /= metric;
             ty /= metric;
-            y = tx >= 0 && tx < 5 ? tx : -1;
-            x = ty >= 0 && ty < 5 ? ty : -1;
+            y = tx >= 0 && tx < 6 ? tx : -1;
+            x = ty >= 0 && ty < 6 ? ty : -1;
         }
         return new Point(x,y);
     }

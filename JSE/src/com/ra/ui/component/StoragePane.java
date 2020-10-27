@@ -17,6 +17,7 @@ public class StoragePane extends JPanel {
     public static final int STORAGE_FULL=1;
     public static final int STORAGE_AVAILABLE=2;
     private static final int itemHeight=50;
+    private final HashMap<Point,Integer> capacity=new HashMap<>();
     private final HashMap<Point, ArrayList<Technology>> storage=new HashMap<>();
     private final HashMap<Technology,Point> reverseIndex=new HashMap<>();
     private final ArrayList<Technology> listPos=new ArrayList<>();
@@ -42,7 +43,7 @@ public class StoragePane extends JPanel {
                     if(px.equals(original))
                         map.put(px, ORIGINAL_STORAGE);
                     else
-                        map.put(px, storage.get(px).size()>=5?STORAGE_FULL:STORAGE_AVAILABLE);
+                        map.put(px, storage.get(px).size()>=capacity.get(px)?STORAGE_FULL:STORAGE_AVAILABLE);
                 }
                 src.storageSelectMode=map;
                 src.storage.setText("取消");
@@ -87,11 +88,15 @@ public class StoragePane extends JPanel {
         });
     }
     public void callStorageConstructed(Point p){
+        capacity.put(p,5);
         storage.put(p,new ArrayList<>());
+    }
+    public void callStorageUpgraded(Point p){
+        capacity.put(p,10);
     }
     public Point callStorage(Technology t){
         for(Point px:storage.keySet()){
-            if(storage.get(px).size()<5){
+            if(storage.get(px).size()<capacity.get(px)){
                 storage.get(px).add(t);
                 reverseIndex.put(t,px);
                 listPos.add(t);
@@ -102,7 +107,7 @@ public class StoragePane extends JPanel {
     }
     public boolean hasSpace(){
         for(Point px:storage.keySet())
-            if(storage.get(px).size()<5)
+            if(storage.get(px).size()<capacity.get(px))
                 return true;
         return false;
     }

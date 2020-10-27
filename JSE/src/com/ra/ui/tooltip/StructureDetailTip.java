@@ -9,6 +9,7 @@ import java.awt.*;
 
 public class StructureDetailTip extends JToolTip {
     String structure;
+    public int level=1;
     public StructureDetailTip(){
         super();
         setOpaque(false);
@@ -36,9 +37,9 @@ public class StructureDetailTip extends JToolTip {
         g2.setFont(R.F);
         Structure target= R.structures.get(structure);
         g2.drawString(target.desc,0,20);
-        paintValidData(target.build,g2,0,"建造消耗");
-        paintValidData(target.consume,g2,getWidth()/3,"每秒消耗");
-        paintValidData(target.produce,g2,getWidth()*2/3,"每秒产出");
+        paintValidData(target.getRG(level,Structure.BUILD),g2,0,"建造消耗");
+        paintValidData(target.getRG(level,Structure.CONSUME),g2,getWidth()/3,"消耗资源");
+        paintValidData(target.getRG(level,Structure.PRODUCE),g2,getWidth()*2/3,"产出资源");
     }
     private void paintValidData(ResourceGroup data,Graphics2D g,int xOffset,String title){
         g.drawString(title,xOffset,50);

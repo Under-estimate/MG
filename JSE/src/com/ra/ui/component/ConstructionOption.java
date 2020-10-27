@@ -1,6 +1,7 @@
 package com.ra.ui.component;
 
 import com.ra.data.ResourceGroup;
+import com.ra.data.Structure;
 import com.ra.ui.GamePane;
 import com.ra.ui.R;
 import com.ra.ui.tooltip.StructureDetailTip;
@@ -15,7 +16,7 @@ import java.util.Arrays;
 public class ConstructionOption extends JPanel {
     private int mouse=-1;
     private final BufferedImage bg= R.getImageResource("Images/construction_option.png");
-    private final String[] correspondent={"矿场","农田","天文台","科研中心","数据中心","工厂","能源工厂","民居"};
+    private final String[] correspondent={"矿场","农田","科研中心","数据中心","工厂","能源工厂","民居"};
     public ConstructionOption(){
         super();
         addMouseListener(new MouseAdapter() {
@@ -62,10 +63,10 @@ public class ConstructionOption extends JPanel {
             g2.setColor(new Color(0, 0, 0, 100));
             for (int i = 0; i < correspondent.length; i++)
                 if (!availability[i])
-                    g2.drawArc(getWidth() / 8, getWidth() / 8, getWidth() * 3 / 4, getHeight() * 3 / 4, i * 45, 45);
+                    g2.drawArc(getWidth() / 8, getWidth() / 8, getWidth() * 3 / 4, getHeight() * 3 / 4, (i*360-90)/7, 51);
             if(mouse>=0&&availability[mouse]) {
                 g2.setColor(new Color(255, 255, 255, 100));
-                g2.drawArc(getWidth()/8,getWidth()/8,getWidth()*3/4,getHeight()*3/4,mouse*45,45);
+                g2.drawArc(getWidth()/8,getWidth()/8,getWidth()*3/4,getHeight()*3/4,(mouse*360-90)/7,51);
             }
         }
     }
@@ -79,14 +80,14 @@ public class ConstructionOption extends JPanel {
         double angle=Math.acos(p.x/r);
         if(p.y<0)
             angle=2*Math.PI-angle;
-        int deg=(int)Math.toDegrees(angle);
-        return deg/45;
+        double deg=Math.toDegrees(angle);
+        return (int)(deg/(360.0/7.0));
     }
     private boolean[] calcAvailability(){
         boolean[] availability=new boolean[correspondent.length];
         Arrays.fill(availability,true);
         for(int i=0;i<correspondent.length;i++){
-            ResourceGroup comparator=R.structures.get(correspondent[i]).build;
+            ResourceGroup comparator=R.structures.get(correspondent[i]).getRG(1,Structure.BUILD);
             ResourceGroup current=R.M.getContent(GamePane.class).resource.data;
             for(String st:R.resources.keySet()){
                 if(current.data.get(st)<comparator.data.get(st))

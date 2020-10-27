@@ -13,9 +13,10 @@ public class MainFrame extends JFrame {
     private final HashMap<Class<? extends GameContentPane>,GameContentPane> content=new HashMap<>();
     private final CardLayout cardManager=new CardLayout();
     private final JPanel sizedPane=new JPanel();
+    public Point offset=new Point(0,0);
     public static final int WIDTH=1280,HEIGHT=768;
     public MainFrame(){
-        super("游戏名叫啥呀? alpha-0.3.0-EA - Team Rise Again");
+        super("游戏名叫啥呀? alpha-1.0.0-EA - Team Rise Again");
         R.loading.setText("Initializing main frame...");
         setMinimumSize(new Dimension(WIDTH,HEIGHT));
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -60,10 +61,10 @@ public class MainFrame extends JFrame {
         int ph=getContentPane().getHeight()*160;
         if(pw>=ph){
             int w=ph/91;
-            sizedPane.setBounds((getContentPane().getWidth()-w)/2,0,w,getContentPane().getHeight());
+            sizedPane.setBounds((getContentPane().getWidth()-w)/2+offset.x,offset.y,w,getContentPane().getHeight());
         }else{
             int h=pw/160;
-            sizedPane.setBounds(0,(getContentPane().getHeight()-h)/2,getContentPane().getWidth(),h);
+            sizedPane.setBounds(offset.x,(getContentPane().getHeight()-h)/2+offset.y,getContentPane().getWidth(),h);
         }
 
     }
@@ -84,5 +85,10 @@ public class MainFrame extends JFrame {
      * */
     public void switchToContent(Class<? extends JPanel> c){
         cardManager.show(sizedPane,c.getName());
+    }
+
+    public void setContentOffset(int x,int y){
+        offset=new Point(x,y);
+        updateContentSize();
     }
 }

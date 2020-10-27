@@ -1,120 +1,204 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
-<structure name="农田" description="能够生产食物的农田" time="5">
-<build>
-<resource name="食物">40</resource>
-<resource name="人口">10</resource>
-</build>
-<consume>
-<resource name="人口">5</resource>
-</consume>
-<produce>
-<resource name="食物">15</resource>
-</produce>
-</structure>
+    <structure name="农田" description="能够生产食物的农田">
+        <level num="1" time="10">
+            <build>
+                <resource name="产能">150</resource>
+            </build>
+            <consume>
+                <resource name="人口">5</resource>
+            </consume>
+            <produce>
+                <resource name="食物">40</resource>
+            </produce>
+        </level>
+        <level num="2" time="30">
+            <build>
+                <resource name="产能">1200</resource>
+            </build>
+            <consume>
+                <resource name="能源">30</resource>
+                <resource name="人口">10</resource>
+            </consume>
+            <produce>
+                <resource name="食物">80</resource>
+            </produce>
+        </level>
+    </structure>
 
-<structure name="矿场" description="能够采集矿石的矿场" time="10">
-<build>
-<resource name="食物">60</resource>
-<resource name="人口">10</resource>
-</build>
-<consume>
-<resource name="食物">5</resource>
-<resource name="人口">5</resource>
-</consume>
-<produce>
-<resource name="矿石">5</resource>
-</produce>
-</structure>
+    <structure name="民居" description="人们在这里居住，能够产生人口">
+        <level num="1" time="10">
+            <build>
+                <resource name="产能">100</resource>
+            </build>
+            <consume>
+                <resource name="食物">25</resource>
+            </consume>
+            <produce>
+                <resource name="人口">25</resource>
+            </produce>
+        </level>
+        <level num="2" time="40">
+            <build>
+                <resource name="产能">800</resource>
+            </build>
+            <consume>
+                <resource name="食物">10</resource>
+            </consume>
+            <produce>
+                <resource name="人口">100</resource>
+            </produce>
+        </level>
+    </structure>
 
-<structure name="民居" description="人们在这里居住，能够产生人口" time="10">
-<build>
-<resource name="食物">40</resource>
-<resource name="人口">5</resource>
-</build>
-<consume>
-<resource name="食物">10</resource>
-</consume>
-<produce>
-<resource name="人口">5</resource>
-</produce>
-</structure>
+    <structure name="矿场" description="能够采集矿石的矿场">
+        <level num="1" time="15">
+            <build>
+                <resource name="产能">200</resource>
+            </build>
+            <consume>
+                <resource name="人口">5</resource>
+            </consume>
+            <produce>
+                <resource name="矿石">20</resource>
+            </produce>
+        </level>
+        <level num="2" time="50">
+            <build>
+                <resource name="产能">1500</resource>
+            </build>
+            <consume>
+                <resource name="能源">50</resource>
+                <resource name="人口">20</resource>
+            </consume>
+            <produce>
+                <resource name="矿石">60</resource>
+            </produce>
+        </level>
+    </structure>
 
-<structure name="能源工厂" description="通过消耗矿石生产能源" time="20">
-<build>
-<resource name="食物">100</resource>
-<resource name="人口">20</resource>
-</build>
-<consume>
-<resource name="食物">20</resource>
-<resource name="人口">10</resource>
-<resource name="矿石">20</resource>
-</consume>
-<produce>
-<resource name="能源">10</resource>
-</produce>
-</structure>
 
-<structure name="工厂" description="通过消耗矿石产出产能" time="20">
-<build>
-<resource name="食物">100</resource>
-<resource name="人口">20</resource>
-</build>
-<consume>
-<resource name="食物">40</resource>
-<resource name="人口">20</resource>
-<resource name="矿石">20</resource>
-</consume>
-<produce>
-<resource name="产能">10</resource>
-</produce>
-</structure>
 
-<structure name="数据中心" description="这里保存着研究得到的所有科技" time="30">
-<build>
-<resource name="食物">100</resource>
-<resource name="人口">20</resource>
-<resource name="产能">20</resource>
-<resource name="能源">50</resource>
-</build>
-<consume>
-<resource name="食物">5</resource>
-<resource name="人口">5</resource>
-<resource name="能源">10</resource>
-</consume>
-<produce>
-</produce>
-</structure>
+    <structure name="能源工厂" description="通过消耗矿石生产能源">
+        <level num="1" time="15">
+            <build>
+                <resource name="产能">200</resource>
+            </build>
+            <consume>
+                <resource name="人口">5</resource>
+                <resource name="矿石">5</resource>
+            </consume>
+            <produce>
+                <resource name="能源">25</resource>
+            </produce>
+        </level>
+        <level num="2" time="50">
+            <build>
+                <resource name="产能">1500</resource>
+            </build>
+            <consume>
+                <resource name="人口">15</resource>
+                <resource name="矿石">30</resource>
+            </consume>
+            <produce>
+                <resource name="能源">150</resource>
+            </produce>
+        </level>
+    </structure>
 
-<structure name="科研中心" description="只在研究新科技时消耗资源" time="30">
-<build>
-<resource name="食物">100</resource>
-<resource name="人口">25</resource>
-<resource name="产能">50</resource>
-<resource name="能源">50</resource>
-</build>
-<consume>
-<resource name="食物">40</resource>
-<resource name="人口">10</resource>
-<resource name="能源">25</resource>
-</consume>
-<produce>
-</produce>
-</structure>
+    <structure name="工厂" description="通过消耗矿石产出产能">
+        <level num="1" time="20">
+            <build>
+                <resource name="产能">200</resource>
+            </build>
+            <consume>
+                <resource name="人口">5</resource>
+                <resource name="能源">10</resource>
+            </consume>
+            <produce>
+                <resource name="产能">25</resource>
+            </produce>
+        </level>
+        <level num="2" time="60">
+            <build>
+                <resource name="产能">1500</resource>
+            </build>
+            <consume>
+                <resource name="人口">25</resource>
+                <resource name="矿石">50</resource>
+            </consume>
+            <produce>
+                <resource name="产能">100</resource>
+            </produce>
+        </level>
+    </structure>
 
-<structure name="天文台" description="通过观测对下一次灾难做出预报" time="30">
-<build>
-<resource name="食物">100</resource>
-<resource name="人口">20</resource>
-<resource name="产能">50</resource>
-<resource name="能源">20</resource>
-</build>
-<consume>
-<resource name="食物">20</resource>
-<resource name="人口">5</resource>
-<resource name="能源">25</resource>
-</consume>
-<produce>
-</produce>
-</structure>
+    <structure name="科研中心" description="只在研究新科技时消耗资源">
+        <level num="1" time="30">
+            <build>
+                <resource name="产能">300</resource>
+            </build>
+            <consume>
+                <resource name="人口">5</resource>
+                <resource name="能源">10</resource>
+            </consume>
+            <produce>
+            </produce>
+        </level>
+        <level num="2" time="0">
+            <build>
+            </build>
+            <consume>
+            </consume>
+            <produce>
+            </produce>
+        </level>
+    </structure>
+
+    <structure name="数据中心" description="这里保存着研究得到的所有科技">
+        <level num="1" time="30">
+            <build>
+                <resource name="产能">400</resource>
+            </build>
+            <consume>
+                <resource name="人口">5</resource>
+            </consume>
+            <produce>
+            </produce>
+        </level>
+        <level num="2" time="60">
+            <build>
+                <resource name="产能">2000</resource>
+            </build>
+            <consume>
+                <resource name="人口">10</resource>
+                <resource name="能源">20</resource>
+            </consume>
+            <produce>
+            </produce>
+        </level>
+    </structure>
+
+
+
+    <structure name="灾难预防" description="对即将发生的灾难进行预防">
+        <level num="1" time="0">
+            <build>
+                <resource name="产能">200</resource>
+            </build>
+            <consume>
+            </consume>
+            <produce>
+            </produce>
+        </level>
+        <level num="2" time="0">
+            <build>
+                <resource name="产能">2000</resource>
+            </build>
+            <consume>
+            </consume>
+            <produce>
+            </produce>
+        </level>
+    </structure>
 </root>

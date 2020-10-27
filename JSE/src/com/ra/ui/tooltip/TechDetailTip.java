@@ -59,8 +59,8 @@ public class TechDetailTip extends JToolTip {
         }
         g2.setColor(Color.WHITE);
         g2.drawString("对于\""+target.modifier+"\"",0,55);
-        paintValidData(target.consume,g2,0,"每秒消耗");
-        paintValidData(target.produce,g2,getWidth()/2,"每秒产出");
+        paintValidData(target.consume,g2,0,"消耗资源");
+        paintValidData(target.produce,g2,getWidth()/2,"产出资源");
     }
     private void paintValidData(ResourceGroup data, Graphics2D g, int xOffset, String title){
         g.drawString(title,xOffset,80);

@@ -1,5 +1,6 @@
 package com.ra.ui.component;
 
+import com.ra.data.Resource;
 import com.ra.data.ResourceGroup;
 import com.ra.ui.R;
 import com.ra.ui.tooltip.MyToolTip;
@@ -50,12 +51,27 @@ public class ResourceDisplay extends JPanel {
             }
         });
     }
+    public void submitVariable(ResourceGroup change){
+        change.data.put("人口",data.data.get("人口"));
+        change.data.put("能源",data.data.get("能源"));
+        submitChange(change);
+    }
     public void submitChange(ResourceGroup change){
-        progress=0;
-        this.change=change;
-        for (String s:R.resources.keySet()){
-            data.data.put(s,data.data.get(s)+change.data.get(s));
+        boolean skip=true;
+        for(String str:change.data.keySet()){
+            Resource r=R.resources.get(str);
+            if(r.instant&&!change.data.get(str).equals(data.data.get(str)))
+                skip=false;
+            else if(!r.instant&&!change.data.get(str).equals(0))
+                skip=false;
         }
+        if(skip)
+            return;
+        progress=0;
+        change.data.put("人口",change.data.get("人口")-data.data.get("人口"));
+        change.data.put("能源",change.data.get("能源")-data.data.get("能源"));
+        this.change=change;
+        data.add(change,true);
         if(animating!=null){
             try {
                 synchronized (interruptLock) {

@@ -1,7 +1,5 @@
 package com.ra.ui.component;
 
-import com.ra.data.Resource;
-import com.ra.data.ResourceGroup;
 import com.ra.data.Structure;
 import com.ra.data.Technology;
 import com.ra.ui.GamePane;
@@ -16,6 +14,8 @@ import java.awt.event.MouseMotionAdapter;
 import java.util.HashMap;
 
 public class TechnologyPane extends JPanel {
+    public static String[] nextPhase={"建筑：机械式工厂","建筑：机械式农场","建筑：机械式矿场","建筑：公寓式民居","建筑：现代能源工厂"};
+    public static HashMap<String,String> resist=new HashMap<>();
     private static final int elementWidth=200,elementHeight=50,xInterval=5,yInterval=30,
     blockWidth=elementWidth+xInterval*2,blockHeight=elementHeight+yInterval*2;
     private final Point offsets=new Point(0,0);
@@ -83,6 +83,12 @@ public class TechnologyPane extends JPanel {
                     setToolTipText(null);
             }
         });
+        resist.put("抗震建筑材料I",GamePane.EARTHQUAKE+1);
+        resist.put("保温建筑材料I",GamePane.FREEZE+1);
+        resist.put("储水设备研究I",GamePane.DROUGHT+1);
+        resist.put("抗震建筑材料II",GamePane.EARTHQUAKE+2);
+        resist.put("保温建筑材料II",GamePane.FREEZE+2);
+        resist.put("储水设备研究II",GamePane.DROUGHT+2);
         reCalcAll();
     }
     private void initData(){
@@ -169,17 +175,30 @@ public class TechnologyPane extends JPanel {
     public void reCalcAll(){
         for(Technology t:R.technologies.values())
             calcSatisfied(t);
-        for(Structure s:R.structures.values()){
-            s.produce=(ResourceGroup) R.original_structures.get(s.name).produce.clone();
-            s.consume=(ResourceGroup) R.original_structures.get(s.name).consume.clone();
+        for(String str:R.structures.keySet()){
+            R.structures.get(str).copyRG(R.original_structures.get(str));
+            R.structures.get(str).unlock.putAll(R.original_structures.get(str).unlock);
         }
         for(Technology t:R.technologies.values()){
             if(t.acquired&&t.satisfied){
                 Structure target=R.structures.get(t.modifier);
-                for(String res:R.resources.keySet()){
-                    target.consume.data.put(res,target.consume.data.get(res)+t.consume.data.get(res));
-                    target.produce.data.put(res,target.produce.data.get(res)+t.produce.data.get(res));
+                for(int i=1;i<=2;i++){
+                    target.getRG(i,Structure.CONSUME).add(t.consume,true);
+                    target.getRG(i,Structure.PRODUCE).add(t.produce,true);
                 }
+                if(t.unlockLevel>0)
+                    target.unlock.put(t.unlockLevel,true);
+            }
+        }
+        boolean next=true;
+        for(String s:nextPhase){
+            next=next&&R.technologies.get(s).acquired&&R.technologies.get(s).satisfied;
+        }
+        if(R.M!=null) {
+            GamePane src = R.M.getContent(GamePane.class);
+            src.callPhaseChange(next ? 2 : 1);
+            for(String s:resist.keySet()){
+                src.resist.unlock.put(resist.get(s),R.technologies.get(s).acquired&&R.technologies.get(s).satisfied);
             }
         }
     }

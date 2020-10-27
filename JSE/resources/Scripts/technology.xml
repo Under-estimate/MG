@@ -76,6 +76,7 @@
         </consume>
         <produce>
         </produce>
+        <unlock>2</unlock>
     </technology>
 
     <technology name="合金I：黄铜" row="4" column="0" target="工厂" time="60" era="2">
@@ -201,6 +202,7 @@
         <produce>
             <resource name="食物">+5</resource>
         </produce>
+        <unlock>2</unlock>
     </technology>
 
     <technology name="工具发明：蒸汽式洒水机" row="4" column="3" target="农田" time="60" era="2">
@@ -295,6 +297,7 @@
         <produce>
             <resource name="矿石">+5</resource>
         </produce>
+        <unlock>2</unlock>
     </technology>
 
     <technology name="工具发明：蒸汽矿车" row="3" column="6" target="矿场" time="60" era="2">
@@ -368,6 +371,7 @@
         <produce>
             <resource name="人口">+2</resource>
         </produce>
+        <unlock>2</unlock>
     </technology>
 
     <technology name="装修：舒适度增加" row="3" column="9" target="民居" time="60" era="2">
@@ -437,6 +441,7 @@
         <produce>
             <resource name="能源">+3</resource>
         </produce>
+        <unlock>2</unlock>
     </technology>
 
     <technology name="深度开发：蜂窝煤" row="3" column="12" target="能源工厂" time="60" era="2">
@@ -470,6 +475,75 @@
         </consume>
         <produce>
             <resource name="能源">+2</resource>
+        </produce>
+    </technology>
+
+    <technology name="灾难研究" row="0" column="14" target="灾难预防" time="0" era="1">
+        <requirements>
+        </requirements>
+        <consume>
+        </consume>
+        <produce>
+        </produce>
+    </technology>
+
+    <technology name="抗震建筑材料I" row="1" column="13" target="灾难预防" time="30" era="1">
+        <requirements>
+            <requirement>灾难研究</requirement>
+        </requirements>
+        <consume>
+        </consume>
+        <produce>
+        </produce>
+    </technology>
+
+    <technology name="保温建筑材料I" row="1" column="14" target="灾难预防" time="30" era="1">
+        <requirements>
+            <requirement>灾难研究</requirement>
+        </requirements>
+        <consume>
+        </consume>
+        <produce>
+        </produce>
+    </technology>
+
+    <technology name="储水设备研究I" row="1" column="15" target="灾难预防" time="30" era="1">
+        <requirements>
+            <requirement>灾难研究</requirement>
+        </requirements>
+        <consume>
+        </consume>
+        <produce>
+        </produce>
+    </technology>
+
+    <technology name="抗震建筑材料II" row="2" column="13" target="灾难预防" time="60" era="2">
+        <requirements>
+            <requirement>抗震建筑材料I</requirement>
+        </requirements>
+        <consume>
+        </consume>
+        <produce>
+        </produce>
+    </technology>
+
+    <technology name="保温建筑材料II" row="2" column="14" target="灾难预防" time="60" era="2">
+        <requirements>
+            <requirement>保温建筑材料I</requirement>
+        </requirements>
+        <consume>
+        </consume>
+        <produce>
+        </produce>
+    </technology>
+
+    <technology name="储水设备研究II" row="2" column="15" target="灾难预防" time="60" era="2">
+        <requirements>
+            <requirement>储水设备研究I</requirement>
+        </requirements>
+        <consume>
+        </consume>
+        <produce>
         </produce>
     </technology>
 </root>
