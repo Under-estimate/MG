@@ -1,5 +1,6 @@
 package com.ra.ui;
 
+import com.ra.SoundManager;
 import com.ra.data.Resource;
 import com.ra.data.Structure;
 import com.ra.data.Technology;
@@ -41,11 +42,13 @@ public class R {
     public static HashMap<String, Structure> original_structures;
     /**所有科技类型*/
     public static HashMap<String, Technology> technologies;
+    public static SoundManager sound;
 
     public static ClassLoader loader=ClassLoader.getSystemClassLoader();
 
 
     public static void initResources(){
+        sound=new SoundManager();
         loading=new LoadingFrame();
         loading.setVisible(true);
         exec=new ScheduledThreadPoolExecutor(3);
@@ -85,7 +88,7 @@ public class R {
                     s.times.put(Integer.parseInt(el.getAttribute("num")),
                             Integer.parseInt(el.getAttribute("time")));
                     for (String type : types)
-                        forEachElement((Element) e.getElementsByTagName(type).item(0), "resource",
+                        forEachElement((Element) el.getElementsByTagName(type).item(0), "resource",
                                 ele -> s.getRG(Integer.parseInt(el.getAttribute("num")), type).data.put(ele.getAttribute("name")
                                         , Integer.parseInt(ele.getTextContent())));
                 });
@@ -104,8 +107,6 @@ public class R {
                 forEachElement((Element)e.getElementsByTagName("requirements").item(0),"requirement",
                         ele->trl.add(ele.getTextContent()));
                 t.requirements=trl.toArray(new String[0]);
-                if(t.requirements.length<=0)
-                    t.acquired=true;
                 forEachElement((Element)e.getElementsByTagName("consume").item(0),"resource",
                         ele->t.consume.data.put(ele.getAttribute("name"),Integer.parseInt(ele.getTextContent())));
                 forEachElement((Element)e.getElementsByTagName("produce").item(0),"resource",

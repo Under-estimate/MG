@@ -17,7 +17,8 @@ public class ResourceGroup implements Cloneable{
     public Object clone(){
         try {
             ResourceGroup rg = (ResourceGroup) super.clone();
-            rg.data=(HashMap<String, Integer>) data.clone();
+            for(String res:R.resources.keySet())
+                rg.data.put(res,data.get(res).intValue());
             return rg;
         }catch (Exception e){
             e.printStackTrace();

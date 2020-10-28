@@ -12,6 +12,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.ScheduledFuture;
@@ -25,6 +26,8 @@ import java.util.concurrent.TimeUnit;
 public class GamePane extends GameContentPane {
     public static final String DROUGHT="旱灾",FREEZE="严寒",EARTHQUAKE="地震";
     public static String[] disasters={DROUGHT,FREEZE,EARTHQUAKE};
+    public static final String[] basicTechs={"建筑：作坊式工厂","建筑：农田","建筑：矿场","建筑：民居","建筑：能源工厂","存储建筑：方尖碑","灾难研究","建筑：科研中心"};
+    public static final ArrayList<String> basic=new ArrayList<>();
 
     /**提示建筑停工的图像*/
     private final BufferedImage warning=R.getImageResource("Images/warning.png");
@@ -45,6 +48,7 @@ public class GamePane extends GameContentPane {
     private boolean showOption=false;
     /**正在建造的坐标*/
     public Point building=null;
+    public ConstructingPane construction=null;
     /**科研中心计数*/
     public int labCount=0;
     /**上一次资源结算后经过的tick数*/
@@ -54,10 +58,10 @@ public class GamePane extends GameContentPane {
     /**正在建筑的进程*/
     private ScheduledFuture<?> buildFuture=null;
     private int currentPhase=0;
-    public Color paintOver=new Color(0,0,0,0);
+    public Color paintOver=new Color(0,0,0);
     public String nextDisaster=null;
     public int nextDisasterLevel=-1;
-    public int beforeDisaster=60;
+    public int beforeDisaster=120;
     public boolean pauseResourceModification=false;
     /**网格参数*/
     public static int xOffset=100,yOffset=500,metric=100;
@@ -99,14 +103,25 @@ public class GamePane extends GameContentPane {
                 metric=(int)(0.05*getWidth());
             }
         });
-        callPhaseChange(1);
         for (int i = 0; i < info.length; i++)
             for (int j = 0; j < info[i].length; j++)
                 info[i][j] = new RealTimeData();
         info[5][5].structure=R.structures.get("数据中心");
+        info[5][5].resistance.put(DROUGHT,3);
+        info[5][5].resistance.put(FREEZE,3);
+        info[5][5].resistance.put(EARTHQUAKE,3);
+        info[5][5].level=1;
         storagePane.callStorageConstructed(new Point(5,5));
+        storagePane.callStorageUpgraded(new Point(5,5));
+        basic.addAll(Arrays.asList(basicTechs));
+        for(String s:basicTechs) {
+            R.technologies.get(s).acquired=true;
+            storagePane.callStorage(R.technologies.get(s));
+        }
+        techPane.reCalcAll();
         info[0][5].structure=R.structures.get("农田");
         info[1][5].structure=R.structures.get("民居");
+
         information.setBackground(Color.BLACK);
         information.setForeground(Color.WHITE);
         information.setSelectedTextColor(Color.WHITE);
@@ -114,7 +129,7 @@ public class GamePane extends GameContentPane {
         information.setEditable(false);
         information.setBorder(new LineBorder(Color.WHITE));
         information.setFont(R.F);
-        information.setText("...");
+        information.setText("多么美好的一天啊");
         technology.setForeground(Color.CYAN);
         techPane.setVisible(false);
         storage.setForeground(Color.green);
@@ -139,6 +154,8 @@ public class GamePane extends GameContentPane {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
+                if(pauseResourceModification)
+                    return;
                 Point p=calcTransformedPosition(e.getPoint(),xOffset,yOffset,metric);
                 optionX=p.x;
                 optionY=p.y;
@@ -163,6 +180,7 @@ public class GamePane extends GameContentPane {
                 remove(operation);
                 remove(resist);
                 if(showOption){
+                    R.sound.playButton();
                     ConstraintLayout.LayoutParamClass param=new ConstraintLayout.LayoutParamClass
                             ((int)(xBias-xMetric*0.7),(int)(yBias-yMetric*3),metric*3,metric*3);
                     if(info[optionX][optionY].structure==null)
@@ -190,6 +208,9 @@ public class GamePane extends GameContentPane {
                     setToolTipText(null);
             }
         });
+    }
+    public void launch(){
+        callPhaseChange(1);
         R.exec.scheduleAtFixedRate(()->{
             try {
                 GamePane.this.repaint();
@@ -202,6 +223,9 @@ public class GamePane extends GameContentPane {
                 e.printStackTrace();
             }
         },0,50, TimeUnit.MILLISECONDS);
+        R.exec.execute(()->{
+            paintOverTransition(Color.BLACK,255,0);
+        });
     }
 
     @Override
@@ -272,7 +296,7 @@ public class GamePane extends GameContentPane {
         remove(options);
         Point p=new Point(optionX,optionY);
         building=p;
-        ConstructingPane construction=new ConstructingPane();
+        construction=new ConstructingPane();
         double xMetric=metric*Math.cos(Math.atan(0.5));
         double yMetric=metric*Math.sin(Math.atan(0.5));
         double xBias=xOffset+(optionX+optionY)*xMetric,yBias=yOffset+(optionX-optionY)*yMetric;
@@ -330,7 +354,7 @@ public class GamePane extends GameContentPane {
         revalidate();
         RealTimeData target=info[optionX][optionY];
         ResourceGroup group=target.structure.getRG(target.level+1,Structure.BUILD).negate();
-        resource.submitChange(group);
+        resource.submitVariable(group);
         buildFuture=R.exec.scheduleAtFixedRate(()->{
             int time=target.structure.times.get(target.level+1);
             construction.progress=(currentBuildProgress+1)/(double)time;
@@ -376,9 +400,9 @@ public class GamePane extends GameContentPane {
                 }
                 if(!isLack) {
                     if(!target.structure.name.equals("科研中心")){
-                        update=update.add(target.getRG(Structure.PRODUCE)).sub(target.getRG(Structure.CONSUME));
+                        update.add(target.getRG(Structure.PRODUCE),true).sub(target.getRG(Structure.CONSUME),true);
                     }else if(requiredLab > 0){
-                        update=update.add(target.getRG(Structure.PRODUCE)).sub(target.getRG(Structure.CONSUME));
+                        update.add(target.getRG(Structure.PRODUCE),true).sub(target.getRG(Structure.CONSUME),true);
                         requiredLab--;
                     }
                     it.remove();
@@ -386,9 +410,9 @@ public class GamePane extends GameContentPane {
                 }
             }
         }
-        for (int i = 0; i < info.length; i++)
-            for (int j = 0; j < info[i].length; j++)
-                info[i][j].lack=false;
+        for (RealTimeData[] realTimeData : info)
+            for (RealTimeData realTimeDatum : realTimeData)
+                realTimeDatum.lack = false;
         for(Point p:lacking)
             info[p.x][p.y].lack=true;
         resource.submitChange(update);
@@ -406,11 +430,21 @@ public class GamePane extends GameContentPane {
         if(beforeDisaster<=0&&nextDisaster!=null){
             R.exec.execute(()->{
                 pauseResourceModification=true;
+                remove(operation);
+                remove(options);
+                remove(resist);
+                if(buildFuture!=null) {
+                    buildFuture.cancel(false);
+                    building = null;
+                }
+                if(construction!=null)
+                    remove(construction);
                 try{
                     Color over=null;
                     String image=null;
                     switch (nextDisaster){
                         case DROUGHT:
+                            R.sound.playMusic(DROUGHT);
                             information.setBackground(Color.YELLOW);
                             information.setForeground(Color.RED);
                             information.setText("警告：过于炎热");
@@ -418,6 +452,7 @@ public class GamePane extends GameContentPane {
                             image="Images/atmos_hot.png";
                         case FREEZE:
                             if(over==null) {
+                                R.sound.playMusic(FREEZE);
                                 information.setBackground(Color.BLACK);
                                 information.setForeground(Color.CYAN);
                                 information.setText("警告：异常寒冷");
@@ -437,34 +472,36 @@ public class GamePane extends GameContentPane {
                             paintOver=new Color(0,0,0,0);
                             break;
                         case EARTHQUAKE:
+                            R.sound.playMusic(EARTHQUAKE);
                             information.setBackground(Color.BLACK);
                             information.setForeground(Color.YELLOW);
                             information.setText("警告：大陆不稳定");
-                            for (int i = 0; i < 20; i++) {
+                            for (int i = 0; i < 40; i++) {
                                 R.M.setContentOffset((int)(20*Math.random()-10),(int)(20*Math.random()-10));
                                 Thread.sleep(50);
                             }
                             calcDisasterLoss();
-                            for (int i = 0; i < 20; i++) {
+                            for (int i = 0; i < 40; i++) {
                                 R.M.setContentOffset((int)(20*Math.random()-10),(int)(20*Math.random()-10));
                                 Thread.sleep(50);
                             }
                             R.M.setContentOffset(0,0);
                             break;
                     }
+                    R.sound.playMusic(Integer.toString(currentPhase));
                 }catch (Exception e){
                     e.printStackTrace();
                 }
                 nextDisaster=disasters[(int)(3*Math.random())];
-                beforeDisaster=60+(int)(120*Math.random());
-                nextDisasterLevel=(int)(3*Math.random())+1;
+                beforeDisaster=120+(int)(240*Math.random());
+                nextDisasterLevel=(int)((1+currentPhase)*Math.random())+1;
                 pauseResourceModification=false;
             });
         }
         if(beforeDisaster<=0&&nextDisaster==null){
-            beforeDisaster=60+(int)(120*Math.random());
+            beforeDisaster=120+(int)(240*Math.random());
             nextDisaster=disasters[(int)(3*Math.random())];
-            nextDisasterLevel=(int)(3*Math.random())+1;
+            nextDisasterLevel=(int)((1+currentPhase)*Math.random())+1;
         }
         information.setBackground(Color.BLACK);
         information.setForeground(Color.white);
@@ -502,6 +539,7 @@ public class GamePane extends GameContentPane {
     public void callPhaseChange(int phase){
         if(phase==currentPhase)
             return;
+        R.sound.playMusic(Integer.toString(phase));
         currentPhase=phase;
         addImage("background",new ParameterizedImage("Images/back"+phase+".png",0,
                 new ConstraintLayout.LayoutParamClass(0.0,0.0,1.0,1.0)));

@@ -35,9 +35,12 @@ public class StoragePane extends JPanel {
                 if(p==null||p.x!=2)
                     return;
                 GamePane src=R.M.getContent(GamePane.class);
-                setVisible(false);
                 HashMap<Point,Integer> map=new HashMap<>();
                 Technology t=listPos.get(p.y);
+                if(GamePane.basic.contains(t.name))
+                    return;
+                setVisible(false);
+                R.sound.playButton();
                 Point original=reverseIndex.get(t);
                 for(Point px:storage.keySet()){
                     if(px.equals(original))
@@ -68,7 +71,6 @@ public class StoragePane extends JPanel {
                 if(previous!=null)
                     offsetY+=e.getY()-previous.y;
                 offsetY= Math.min(offsetY, 0);
-                offsetY= Math.max(Math.min(0,getHeight()-itemHeight*storage.size()*5),offsetY);
                 previous=e.getPoint();
             }
 
@@ -120,11 +122,17 @@ public class StoragePane extends JPanel {
     }
     public Technology[] callStorageDestructed(Point p){
         Technology[] ta=storage.remove(p).toArray(new Technology[0]);
+        GamePane src=R.M.getContent(GamePane.class);
         for(Technology t:ta) {
+            if(t.name.equals(src.techPane.ongoingTechResearch)) {
+                src.techPane.ongoingTechResearch = null;
+                src.techPane.progress=0;
+            }
             t.acquired=false;
             reverseIndex.remove(t);
             listPos.remove(t);
         }
+        src.techPane.reCalcAll();
         return ta;
     }
     @Override
@@ -151,13 +159,20 @@ public class StoragePane extends JPanel {
                 if(mouse.x==1) {
                     g2.fillRect(x1, yb, x2 - x1, itemHeight);
                     display="正在显示";
-                }else if(mouse.x==2)
-                    g2.fillRect(x2,yb,getWidth()-x2,itemHeight);
+                }
             }
             g2.setColor(Color.GREEN);
             g2.drawString(t.name,5,yb+40);
             g2.drawString(display,x1+5,yb+40);
             g2.drawString("数据迁移",x2+5,yb+40);
+            if (GamePane.basic.contains(t.name)) {
+                g2.setColor(new Color(0, 0, 0, 100));
+                g2.fillRect(x2, yb, getWidth() - x2, itemHeight);
+            }else if(mouse!=null&&i==mouse.y&&mouse.x == 2) {
+                g2.setColor(new Color(255, 255, 255, 100));
+                g2.fillRect(x2, yb, getWidth() - x2, itemHeight);
+            }
+            g2.setColor(Color.GREEN);
             g2.drawLine(0,yb+itemHeight,getWidth(),yb+itemHeight);
         }
     }

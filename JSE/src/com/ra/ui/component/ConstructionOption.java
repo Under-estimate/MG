@@ -26,8 +26,10 @@ public class ConstructionOption extends JPanel {
                     return;
                 int option=calcMousePos(e.getPoint());
                 boolean[] availability=calcAvailability();
-                if(option>=0&&availability[option])
+                if(option>=0&&availability[option]) {
                     R.M.getContent(GamePane.class).callBuild(correspondent[option]);
+                    R.sound.playButton();
+                }
             }
             @Override
             public void mouseExited(MouseEvent e) {
@@ -93,6 +95,8 @@ public class ConstructionOption extends JPanel {
                 if(current.data.get(st)<comparator.data.get(st))
                     availability[i]=false;
             }
+            if(!R.structures.get(correspondent[i]).unlock.get(1))
+                availability[i]=false;
         }
         return availability;
     }

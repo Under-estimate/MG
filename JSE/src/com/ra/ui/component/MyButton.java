@@ -60,8 +60,10 @@ public class MyButton extends JPanel {
             @Override
             public void mouseReleased(MouseEvent e) {
                 press=false;
-                if(listener!=null)
+                if(listener!=null) {
+                    R.sound.playButton();
                     listener.actionPerformed(null);
+                }
             }
 
             @Override

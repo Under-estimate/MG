@@ -25,11 +25,12 @@ public class ResistOption extends JPanel {
             public void mouseClicked(MouseEvent e) {
                 mouse=calcMousePos(e.getPoint());
                 GamePane src=R.M.getContent(GamePane.class);
-                RealTimeData target=src.info[src.optionX][src.optionY];
                 if(mouse>=0){
                     boolean[] available=calcAvailability();
-                    if(available[mouse])
+                    if(available[mouse]) {
+                        R.sound.playButton();
                         src.callResistanceUpdate(coordinate[mouse]);
+                    }
                 }
             }
             @Override
@@ -52,7 +53,7 @@ public class ResistOption extends JPanel {
                 }
             }
         });
-        for (int i = 1; i <= 3; i++) {
+        for (int i = 1; i <= 4; i++) {
             unlock.put(GamePane.DROUGHT+i,false);
             unlock.put(GamePane.FREEZE+i,false);
             unlock.put(GamePane.EARTHQUAKE+i,false);

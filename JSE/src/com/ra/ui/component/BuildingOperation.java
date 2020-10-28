@@ -16,7 +16,7 @@ import java.awt.image.BufferedImage;
 
 public class BuildingOperation extends JPanel {
     private int mouse=-1;
-    private StructureDetailTip tip=null;
+    public int level=1;
     private final BufferedImage bg= R.getImageResource("Images/structure_option.png");
     public BuildingOperation(){
         super();
@@ -25,12 +25,16 @@ public class BuildingOperation extends JPanel {
             public void mouseClicked(MouseEvent e) {
                 int option=calcMousePos(e.getPoint());
                 GamePane src=R.M.getContent(GamePane.class);
-                if(option==0)
+                if(option==0) {
                     src.callDestroy();
-                else if(option==1&&src.building==null&&calcUpgradeAvailability())
+                    R.sound.playButton();
+                } else if(option==1&&src.building==null&&calcUpgradeAvailability()) {
                     src.callUpgrade();
-                else if(option==2)
+                    R.sound.playButton();
+                }else if(option==2) {
                     src.callShowResistOption();
+                    R.sound.playButton();
+                }
             }
             @Override
             public void mouseExited(MouseEvent e) {
@@ -52,9 +56,8 @@ public class BuildingOperation extends JPanel {
                         setToolTipText(null);
                         return;
                     }
-                    if(tip!=null) {
-                        tip.level = target.level + 1;
-                    }
+                    level = target.level+1;
+                    System.out.println(level);
                 }
                 else if(mouse==2)
                     setToolTipText("做好抗灾准备。");
@@ -66,18 +69,22 @@ public class BuildingOperation extends JPanel {
 
     @Override
     public JToolTip createToolTip() {
-        if(mouse==1)
-            return tip=new StructureDetailTip();
+        if(mouse==1) {
+            StructureDetailTip tip=new StructureDetailTip();
+            tip.bo=this;
+            return tip;
+        }
         return new MyToolTip();
     }
 
     @Override
     public void paint(Graphics g) {
         Graphics2D g2=(Graphics2D)g;
+        GamePane src=R.M.getContent(GamePane.class);
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
         g2.drawImage(bg,0,0,getWidth(),getHeight(),this);
         g2.setStroke(new BasicStroke(getWidth() / 4.0f,BasicStroke.CAP_BUTT,BasicStroke.JOIN_BEVEL));
-        boolean upgrade=calcUpgradeAvailability();
+        boolean upgrade=calcUpgradeAvailability()&&src.building==null;
         if(mouse>=0&&!(mouse==1&!upgrade)) {
             g2.setColor(new Color(255, 255, 255, 100));
             g2.drawArc(getWidth()/8,getWidth()/8,getWidth()*3/4,getHeight()*3/4,mouse*60,60);

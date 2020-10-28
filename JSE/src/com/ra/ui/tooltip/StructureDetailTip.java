@@ -3,12 +3,14 @@ package com.ra.ui.tooltip;
 import com.ra.data.ResourceGroup;
 import com.ra.data.Structure;
 import com.ra.ui.R;
+import com.ra.ui.component.BuildingOperation;
 
 import javax.swing.*;
 import java.awt.*;
 
 public class StructureDetailTip extends JToolTip {
     String structure;
+    public BuildingOperation bo=null;
     public int level=1;
     public StructureDetailTip(){
         super();
@@ -29,6 +31,8 @@ public class StructureDetailTip extends JToolTip {
 
     @Override
     public void paint(Graphics g) {
+        if(bo!=null)
+            level=bo.level;
         Graphics2D g2=(Graphics2D)g;
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         g2.setColor(new Color(0,0,0));

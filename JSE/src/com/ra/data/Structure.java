@@ -17,7 +17,7 @@ public class Structure implements Cloneable{
         resources.put(BUILD+2,new ResourceGroup());
         resources.put(CONSUME+2,new ResourceGroup());
         resources.put(PRODUCE+2,new ResourceGroup());
-        unlock.put(1,true);
+        unlock.put(1,false);
         unlock.put(2,false);
         unlock.put(3,false);
     }
@@ -30,7 +30,7 @@ public class Structure implements Cloneable{
         resources.put(BUILD+2,new ResourceGroup());
         resources.put(CONSUME+2,new ResourceGroup());
         resources.put(PRODUCE+2,new ResourceGroup());
-        unlock.put(1,true);
+        unlock.put(1,false);
         unlock.put(2,false);
         unlock.put(3,false);
     }
@@ -42,6 +42,7 @@ public class Structure implements Cloneable{
             s.desc=desc;
             s.times=(HashMap<Integer, Integer>) times.clone();
             s.resources=new HashMap<>();
+            s.unlock=(HashMap<Integer, Boolean>) unlock.clone();
             for(int i=1;i<=2;i++) {
                 s.resources.put(Structure.BUILD + i, (ResourceGroup) resources.get(Structure.BUILD+ i).clone());
                 s.resources.put(Structure.PRODUCE + i, (ResourceGroup) resources.get(Structure.PRODUCE+ i).clone());

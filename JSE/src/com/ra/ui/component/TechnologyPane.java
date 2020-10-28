@@ -14,7 +14,7 @@ import java.awt.event.MouseMotionAdapter;
 import java.util.HashMap;
 
 public class TechnologyPane extends JPanel {
-    public static String[] nextPhase={"建筑：机械式工厂","建筑：机械式农场","建筑：机械式矿场","建筑：公寓式民居","建筑：现代能源工厂"};
+    public static String[] nextPhase={"建筑：机械式工厂","建筑：机械式农场","建筑：机械式矿场","建筑：公寓式民居","建筑：现代能源工厂","存储建筑：留声机"};
     public static HashMap<String,String> resist=new HashMap<>();
     private static final int elementWidth=200,elementHeight=50,xInterval=5,yInterval=30,
     blockWidth=elementWidth+xInterval*2,blockHeight=elementHeight+yInterval*2;
@@ -42,6 +42,7 @@ public class TechnologyPane extends JPanel {
                     GamePane src=R.M.getContent(GamePane.class);
                     if(satisfied&&!target.acquired&&ongoingTechResearch==null
                             &&src.labCount>0&&src.storagePane.hasSpace()) {
+                        R.sound.playButton();
                         progress=0;
                         ongoingTechResearch=target.name;
                         src.storagePane.callStorage(target);
@@ -115,6 +116,8 @@ public class TechnologyPane extends JPanel {
     public void paint(Graphics g) {
         super.paint(g);
         Graphics2D g2=(Graphics2D)g;
+        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setColor(new Color(0,0,0,100));
         g2.fillRect(0,0,getWidth(),getHeight());
         g2.setColor(Color.CYAN);
